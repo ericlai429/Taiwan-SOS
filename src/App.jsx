@@ -46,71 +46,61 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none pb-20">
-      {/* 頂部長輩高對比標頭 */}
-      <header className="bg-slate-900 border-b-2 border-slate-800 px-3 py-2.5 sticky top-0 z-50 shadow-lg backdrop-blur-md bg-slate-900/90">
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-600 rounded-2xl shadow-md">
-              <Shield className="w-6 h-6 text-white" />
+      {/* 頂部長輩高對比標頭 (單行防折疊與防止直向排版錯亂) */}
+      <header className="bg-slate-900 border-b border-slate-800 px-3 py-2 sticky top-0 z-50 shadow-md backdrop-blur-md bg-slate-900/95">
+        <div className="max-w-3xl mx-auto flex items-center justify-between gap-1.5 h-10">
+          {/* 左側標題：極致單行，嚴禁直向折字 */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="p-1.5 bg-emerald-600 rounded-xl shadow-md shrink-0">
+              <Shield className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-senior-base font-black tracking-wide text-white leading-tight">
-                台灣急難通 <span className="text-xs text-amber-300 font-bold hidden sm:inline">(Taiwan SOS)</span>
-              </h1>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <span className="flex items-center gap-1 text-emerald-400 font-bold hidden sm:inline">
-                  <Calendar className="w-3.5 h-3.5" /> {todayStr}
-                </span>
-                {cipherCode && (
-                  <span className="flex items-center gap-1 text-cyan-300 font-bold bg-cyan-950 px-2 py-0.5 rounded-full border border-cyan-700">
-                    <Lock className="w-3 h-3" /> 暗碼對齊
-                  </span>
-                )}
-              </div>
-            </div>
+            <h1 className="text-base sm:text-senior-lg font-black tracking-wide text-white whitespace-nowrap shrink-0">
+              台灣急難通
+            </h1>
+            {cipherCode && (
+              <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-cyan-300 font-bold bg-cyan-950 px-2 py-0.5 rounded-full border border-cyan-700">
+                <Lock className="w-3 h-3" /> 暗碼
+              </span>
+            )}
           </div>
 
-          {/* 頂部快捷應變工具與直撥電話 */}
-          <div className="flex items-center gap-1.5">
+          {/* 右側工具列：精簡圖示按鈕，防止擠壓左側標題 */}
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={handleResetData}
-              className="p-2 bg-slate-800 hover:bg-rose-950 text-slate-300 hover:text-rose-300 rounded-xl border border-slate-700 hover:border-rose-600 text-xs font-bold flex items-center gap-1 active:scale-95 transition-all"
-              title="清除所有網頁暫存與舊資料"
+              className="p-1.5 bg-slate-800 hover:bg-rose-950 text-slate-300 rounded-xl border border-slate-700 text-xs font-bold active:scale-95 transition-all"
+              title="重置暫存"
             >
               <RotateCcw className="w-4 h-4 text-slate-400" />
-              <span className="hidden md:inline">重置暫存</span>
             </button>
 
             <button
               onClick={() => setIsFlashlightOpen(true)}
-              className="p-2 bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-xl border border-amber-600 text-xs font-bold flex items-center gap-1 active:scale-95"
-              title="手電筒與爆閃燈"
+              className="p-1.5 bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-xl border border-amber-600 text-xs font-bold active:scale-95"
+              title="手電筒"
             >
               <Zap className="w-4 h-4 text-amber-400" />
-              <span className="hidden md:inline">手電筒</span>
             </button>
 
             <button
               onClick={() => setIsSirenOpen(true)}
-              className="p-2 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 rounded-xl border border-cyan-600 text-xs font-bold flex items-center gap-1 active:scale-95"
-              title="防空警報試聽導引"
+              className="p-1.5 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 rounded-xl border border-cyan-600 text-xs font-bold active:scale-95"
+              title="警報試聽"
             >
               <Radio className="w-4 h-4 text-cyan-400" />
-              <span className="hidden md:inline">警報試聽</span>
             </button>
 
             <button
               onClick={() => setIsChecklistOpen(true)}
-              className="p-2 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 rounded-xl border border-emerald-600 text-xs font-bold flex items-center gap-1 active:scale-95"
-              title="避難包對照表"
+              className="p-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 rounded-xl border border-emerald-600 text-xs font-bold active:scale-95"
+              title="避難包"
             >
               <ShoppingBag className="w-4 h-4 text-emerald-400" />
-              <span className="hidden md:inline">避難包</span>
             </button>
 
             <a
               href="tel:119"
-              className="bg-rose-600 hover:bg-rose-500 text-white px-2.5 py-1.5 rounded-xl text-sm font-extrabold flex items-center gap-1 shadow active:scale-95 border border-rose-400"
+              className="bg-rose-600 hover:bg-rose-500 text-white px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1 shadow active:scale-95 border border-rose-400 whitespace-nowrap ml-1"
             >
               <Phone className="w-3.5 h-3.5" /> 119
             </a>
