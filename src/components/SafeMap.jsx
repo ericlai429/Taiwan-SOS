@@ -1043,11 +1043,11 @@ export default function SafeMap({
         />
       </div>
 
-      {/* 🛡️ 智能網格分區 2：廣播發話列 (避開右側功能欄，支援上下自由拖動) */}
+      {/* 🛡️ 智能網格分區 2：廣播發話列 (避開右側功能欄 1~5 級距，支援上下自由拖動) */}
       <div className={`absolute bottom-3 z-[990] transition-all pointer-events-auto flex flex-col gap-2 ${
         isLandscape && isMobile
           ? 'left-16 right-3 max-w-lg'
-          : 'left-2 right-14 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:right-auto sm:px-3'
+          : 'left-2 right-16 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:right-auto sm:px-3'
       }`}>
         {showInvasion && (
           <InvasionPlaybackBar
