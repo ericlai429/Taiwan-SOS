@@ -29,6 +29,8 @@ import CountySelector from './CountySelector';
 import DanmakuOverlay from './DanmakuOverlay';
 import DanmakuInputBar from './DanmakuInputBar';
 import Tooltip from './Tooltip';
+import GPSShareModal from './GPSShareModal';
+import { Share2 } from 'lucide-react';
 import invasionHistoryData from '../data/invasion_history.json';
 
 export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 }) {
@@ -125,6 +127,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
   const [isFlashlightOpen, setIsFlashlightOpen] = useState(false);
   const [isSirenOpen, setIsSirenOpen] = useState(false);
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
+  const [isGPSShareOpen, setIsGPSShareOpen] = useState(false);
 
   // 1. 初始化 Leaflet 地圖
   useEffect(() => {
@@ -679,6 +682,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
       <div className={`absolute bottom-3 z-[995] flex flex-col gap-1.5 transition-all ${
         isLandscape && isMobile ? 'left-16' : 'right-3'
       }`}>
+        {/* 1. 我的位置 */}
         <Tooltip text="我的位置：重新定位至 GPS 動態座標" position="left">
           <button
             onClick={recenterMap}
@@ -695,7 +699,24 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
           </button>
         </Tooltip>
 
-        {/* 新增彩色災害圈 */}
+        {/* 2. 📤 分享 GPS 座標與救援位置 */}
+        <Tooltip text="分享座標：開啟精準度提醒並傳送救援座標給好友" position="left">
+          <button
+            onClick={() => setIsGPSShareOpen(true)}
+            className={`bg-teal-950/95 border border-teal-400 hover:bg-teal-900 text-teal-300 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
+              btnLevel === 1 ? 'w-[25px] h-[25px] p-0 rounded-lg text-[10px]' :
+              btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
+              btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl gap-1.5' :
+              btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl gap-1.5' :
+              'h-[50px] px-3.5 py-2 text-senior-sm rounded-2xl font-black gap-2'
+            }`}
+          >
+            <Share2 className={`text-teal-400 animate-bounce-short shrink-0 ${btnLevel <= 2 ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+            {btnLevel >= 3 && <span className="text-xs text-white hidden sm:inline">分享座標</span>}
+          </button>
+        </Tooltip>
+
+        {/* 3. 新增彩色災害圈 */}
         <Tooltip text="新增彩色圈：劃定停水(卡其)/封路(橘)/傷亡(紅)區域" position="left">
           <button
             onClick={() => setIsAddHazardOpen(true)}
@@ -712,7 +733,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
           </button>
         </Tooltip>
 
-        {/* 標記危險地區 (旗標) */}
+        {/* 4. 標記危險地區 (旗標) */}
         <Tooltip text="標記危險區：放置 AES-GCM 暗碼加密危險旗標" position="left">
           <button
             onClick={() => setIsAddFlagOpen(true)}
@@ -729,7 +750,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
           </button>
         </Tooltip>
 
-        {/* 每日情報紀錄 */}
+        {/* 5. 每日情報紀錄 */}
         <Tooltip text="每日情報：日期檢視每日地圖狀況日誌" position="left">
           <button
             onClick={() => setIsDailyIntelOpen(true)}
@@ -746,6 +767,13 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
           </button>
         </Tooltip>
       </div>
+
+      {/* 📡 GPS 分享與 Wi-Fi 精準度提醒 Modal */}
+      <GPSShareModal
+        isOpen={isGPSShareOpen}
+        onClose={() => setIsGPSShareOpen(false)}
+        userLocation={userLocation}
+      />
 
       {/* Modal 彈窗元件 */}
       <AddDangerFlagModal
