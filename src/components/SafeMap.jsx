@@ -1043,11 +1043,11 @@ export default function SafeMap({
         />
       </div>
 
-      {/* 🛡️ 智能網格分區 2：廣播發話列 (避開右側功能欄 1~5 級距，支援上下自由拖動) */}
-      <div className={`absolute bottom-3 z-[990] transition-all pointer-events-auto flex flex-col gap-2 ${
+      {/* 🛡️ 智能網格分區 2：廣播發話列 (獨佔底部 100% 全寬度，零卡字零截斷) */}
+      <div className={`absolute bottom-2 z-[990] transition-all pointer-events-auto flex flex-col gap-1.5 ${
         isLandscape && isMobile
           ? 'left-16 right-3 max-w-lg'
-          : 'left-2 right-16 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:right-auto sm:px-3'
+          : 'left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:right-auto sm:px-3'
       }`}>
         {showInvasion && (
           <InvasionPlaybackBar
@@ -1058,9 +1058,13 @@ export default function SafeMap({
         <DanmakuInputBar onSendDanmaku={handleSendDanmaku} />
       </div>
 
-      {/* 🛡️ 智能網格分區 3：右側側邊功能欄 (獨立動態定位，絕對零遮擋) */}
-      <div className={`absolute bottom-3 z-[995] flex flex-col gap-1.5 transition-all ${
-        isLandscape && isMobile ? 'left-16' : 'right-2'
+      {/* 🛡️ 智能網格分區 3：右側側邊功能欄 (獨立動態定位於廣播欄上方，垂直隔離 100% 零遮擋) */}
+      <div className={`absolute z-[995] flex flex-col gap-1.5 transition-all ${
+        isLandscape && isMobile
+          ? 'left-16 bottom-3'
+          : showInvasion
+          ? 'bottom-[120px] right-2 sm:bottom-3 sm:right-3'
+          : 'bottom-[72px] right-2 sm:bottom-3 sm:right-3'
       }`}>
         {/* 1. 我的位置 */}
         <Tooltip text="我的位置：重新定位至 GPS 動態座標" position="left">
