@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff, ShieldCheck, Activity } from 'lucide-react';
+import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff, ShieldCheck, Activity, Radio } from 'lucide-react';
 import { encryptMessage, decryptMessage } from '../services/crypto';
 import { getStoredCipherCode, setStoredCipherCode, getStoredMessages, saveMessage, appendDayTimeLog } from '../services/storage';
 import { sanitizeHTML, checkCipherStrength } from '../utils/security';

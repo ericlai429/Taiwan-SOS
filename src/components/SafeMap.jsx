@@ -208,8 +208,12 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
       center: [25.0645, 121.6570],
       zoom: 14,
       zoomControl: false,
+      preferCanvas: true, // 📌 啟用 HTML5 Canvas 向量硬體加速渲染 (徹底消除雙指縮放卡頓)
       fadeAnimation: false, // 停用淡出淡入動畫，防止地點文字與圖標在移動或縮放地圖時短暫消失
-      markerZoomAnimation: true
+      zoomAnimation: true, // 啟用平滑手勢縮放
+      markerZoomAnimation: true,
+      bounceAtZoomLimits: false,
+      wheelDebounceTime: 40
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {

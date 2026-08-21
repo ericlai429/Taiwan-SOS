@@ -30,15 +30,14 @@
 .shelter-icon,
 .med-icon,
 .sup-icon {
-  transition: opacity 0.05s linear !important;
-  will-change: transform, opacity !important;
-  transform-style: preserve-3d !important;
+  will-change: transform !important;
+  transform: translateZ(0);
   backface-visibility: hidden !important;
   -webkit-backface-visibility: hidden !important;
 }
 
 .leaflet-zoom-anim .leaflet-zoom-animated {
-  will-change: transform, opacity !important;
+  will-change: transform !important;
 }
 
 .leaflet-popup {
