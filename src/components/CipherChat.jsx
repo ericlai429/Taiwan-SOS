@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, Send, Key } from 'lucide-react';
+import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff } from 'lucide-react';
 import { encryptMessage, decryptMessage } from '../services/crypto';
 import { getStoredCipherCode, setStoredCipherCode, getStoredMessages, saveMessage } from '../services/storage';
 
@@ -8,7 +8,44 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
   const [messages, setMessages] = useState([]);
   const [decryptedList, setDecryptedList] = useState([]);
   const [inputText, setInputText] = useState('');
-  const [senderName, setSenderName] = useState('長輩/親友');
+
+  // 📌 自動偵測/預設手機末 3 碼 (支援自由修改與持久化)
+  const [phone3Digits, setPhone3Digits] = useState(() => {
+    try {
+      const saved = localStorage.getItem('taiwan_sos_phone_3digits');
+      if (saved) return saved;
+      const gen = String(Math.floor(100 + Math.random() * 900));
+      localStorage.setItem('taiwan_sos_phone_3digits', gen);
+      return gen;
+    } catch (e) {
+      return '888';
+    }
+  });
+
+  // 📌 自訂發話暱稱
+  const [customNickname, setCustomNickname] = useState(() => {
+    try {
+      return localStorage.getItem('taiwan_sos_custom_nickname') || '親友';
+    } catch (e) {
+      return '親友';
+    }
+  });
+
+  // 📌 匿名模式切換
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
+  // 計算動態發話抬頭
+  const currentSenderName = isAnonymous
+    ? `匿名親友 (末3碼: ${phone3Digits || '888'})`
+    : `${customNickname.trim() || '親友'} (末3碼: ${phone3Digits || '888'})`;
+
+  // 持久化儲存發話身份
+  useEffect(() => {
+    try {
+      localStorage.setItem('taiwan_sos_phone_3digits', phone3Digits);
+      localStorage.setItem('taiwan_sos_custom_nickname', customNickname);
+    } catch (e) {}
+  }, [phone3Digits, customNickname]);
 
   // 載入訊息歷史
   useEffect(() => {
@@ -60,7 +97,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
 
     const newMsg = {
       id: 'msg-' + Date.now(),
-      sender: senderName || '親友',
+      sender: currentSenderName,
       text: cipherText,
       isEncrypted: !!cipherCode,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -73,7 +110,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
 
   // 一鍵發送平安心跳
   const sendQuickHeartbeat = () => {
-    setInputText(`🟢 [平安心跳] 我目前平安，無須擔心！ (${new Date().toLocaleTimeString()})`);
+    setInputText(`🟢 [平安心跳] 我目前平安，無須擔心！ (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`);
   };
 
   return (
@@ -113,21 +150,79 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
         </p>
       </div>
 
-      {/* 暱稱設定 */}
-      <div className="flex items-center gap-2 px-1">
-        <span className="text-[13px] font-bold text-slate-300">您的暱稱：</span>
-        <input
-          type="text"
-          value={senderName}
-          onChange={(e) => setSenderName(e.target.value)}
-          className="bg-slate-800 border border-slate-600 rounded-lg px-2.5 py-1 text-[13px] text-white font-bold w-32"
-        />
+      {/* 📱 手機末 3 碼與發話暱稱 / 匿名自訂設定卡 */}
+      <div className="bg-slate-900/90 border border-slate-700 rounded-2xl p-3 space-y-2 text-xs shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+          <div className="flex items-center gap-1.5 font-bold text-cyan-300">
+            <Smartphone className="w-4 h-4 text-cyan-400" />
+            <span>發話身份與手機末 3 碼自訂</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsAnonymous(!isAnonymous)}
+            className={`px-2 py-0.5 rounded-lg border font-bold text-[11px] flex items-center gap-1 transition-all ${
+              isAnonymous
+                ? 'bg-purple-950 border-purple-500 text-purple-300 shadow'
+                : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+            }`}
+          >
+            {isAnonymous ? <EyeOff className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+            <span>{isAnonymous ? '🕵️ 已開啟匿名發話' : '👤 一般暱稱發話'}</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-400 mb-1">
+              📱 手機末 3 碼 (自動偵測 / 可自由更動)：
+            </label>
+            <div className="flex items-center gap-1">
+              <span className="text-amber-400 font-bold font-mono">#</span>
+              <input
+                type="text"
+                maxLength={3}
+                value={phone3Digits}
+                onChange={(e) => setPhone3Digits(e.target.value.replace(/\D/g, ''))}
+                placeholder="末3碼"
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono font-bold text-amber-300 text-center focus:border-cyan-400 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setPhone3Digits(String(Math.floor(100 + Math.random() * 900)))}
+                title="產生隨機末3碼"
+                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-slate-300 text-[10px] shrink-0 font-bold"
+              >
+                🎲 換碼
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-400 mb-1">
+              ✏️ 自訂發話暱稱 (可自訂或匿名)：
+            </label>
+            <input
+              type="text"
+              disabled={isAnonymous}
+              value={customNickname}
+              onChange={(e) => setCustomNickname(e.target.value)}
+              placeholder={isAnonymous ? "匿名模式發話中..." : "如：大伯、媽媽、志工..."}
+              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-bold text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none disabled:opacity-40"
+            />
+          </div>
+        </div>
+
+        <div className="bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between">
+          <span className="text-slate-400">當前廣播/聊天抬頭：</span>
+          <strong className="text-cyan-300 font-mono font-bold text-[12px]">{currentSenderName}</strong>
+        </div>
       </div>
 
       {/* 對話歷史紀錄 (文字大小為 15px) */}
       <div className="bg-slate-900/80 border border-slate-700 rounded-2xl p-3 shadow-inner min-h-[260px] max-h-[360px] overflow-y-auto space-y-2.5">
         {decryptedList.map((m) => {
-          const isMe = m.sender === senderName;
+          const isMe = m.sender === currentSenderName;
           return (
             <div
               key={m.id}
