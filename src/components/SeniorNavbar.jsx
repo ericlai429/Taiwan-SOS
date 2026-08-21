@@ -78,7 +78,7 @@ export default function SeniorNavbar({ activeTab, setActiveTab, btnLevel = 3 }) 
   // 橫向模式 (Landscape)
   if (isLandscape && isMobile) {
     return (
-      <nav className="fixed top-0 bottom-0 left-0 z-50 bg-slate-900/95 border-r border-slate-800 backdrop-blur-md px-1 py-1.5 flex flex-col justify-center gap-1.5 shadow-2xl">
+      <nav className="fixed top-0 bottom-0 left-0 z-[2500] bg-slate-900/95 border-r border-slate-800 backdrop-blur-md px-1 py-1.5 flex flex-col justify-center gap-1.5 shadow-2xl">
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -107,9 +107,9 @@ export default function SeniorNavbar({ activeTab, setActiveTab, btnLevel = 3 }) 
     );
   }
 
-  // 直向模式 (Portrait)：標準底部橫向導覽列 (匹配 5 級距按鈕切換)
+  // 直向模式 (Portrait)：標準底部橫向導覽列 (匹配 5 級距按鈕切換，z-[2500] 防遮擋)
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 border-t border-slate-800 backdrop-blur-md px-1.5 py-1">
+    <nav className="fixed bottom-0 left-0 right-0 z-[2500] bg-slate-900/95 border-t border-slate-800 backdrop-blur-md px-1.5 py-1">
       <div className="max-w-xl mx-auto flex justify-around items-center">
         {tabs.map((t) => {
           const Icon = t.icon;

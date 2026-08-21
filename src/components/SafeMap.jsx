@@ -239,39 +239,50 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     loadAndDecryptData();
   }, [cipherCode]);
 
-  // 4. 定位標籤與 5km 範圍圈
+  // 4. 定位標籤與 5km 範圍圈 (平滑 setLatLng，防止縮放地圖時 Popup 閃爍或短暫消失)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !userLocation) return;
 
-    if (layersRef.current.userMarker) map.removeLayer(layersRef.current.userMarker);
-    if (layersRef.current.radiusCircle) map.removeLayer(layersRef.current.radiusCircle);
+    const latlng = [userLocation.lat, userLocation.lng];
 
-    const userIcon = L.divIcon({
-      className: 'custom-user-marker',
-      html: `
-        <div class="relative flex items-center justify-center w-8 h-8">
-          <div class="absolute w-8 h-8 bg-blue-500 rounded-full opacity-40 animate-ping"></div>
-          <div class="w-6 h-6 bg-blue-600 border-4 border-white rounded-full shadow-lg"></div>
-        </div>
-      `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
-    });
+    if (!layersRef.current.userMarker) {
+      const userIcon = L.divIcon({
+        className: 'custom-user-marker',
+        html: `
+          <div class="relative flex items-center justify-center w-8 h-8">
+            <div class="absolute w-8 h-8 bg-blue-500 rounded-full opacity-40 animate-ping"></div>
+            <div class="w-6 h-6 bg-blue-600 border-4 border-white rounded-full shadow-lg"></div>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
 
-    layersRef.current.userMarker = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
-      .addTo(map)
-      .bindPopup('<div class="font-bold text-base">📍 您目前的動態位置</div>');
+      layersRef.current.userMarker = L.marker(latlng, { icon: userIcon })
+        .addTo(map)
+        .bindPopup('<div class="font-bold text-base">📍 您目前的動態位置</div>', { autoPan: false, keepInView: true });
+    } else {
+      layersRef.current.userMarker.setLatLng(latlng);
+    }
 
     if (useRadiusFilter) {
-      layersRef.current.radiusCircle = L.circle([userLocation.lat, userLocation.lng], {
-        radius: radiusKm * 1000,
-        color: '#15803d',
-        fillColor: '#22c55e',
-        fillOpacity: 0.12,
-        weight: 3,
-        dashArray: '8, 8'
-      }).addTo(map);
+      if (!layersRef.current.radiusCircle) {
+        layersRef.current.radiusCircle = L.circle(latlng, {
+          radius: radiusKm * 1000,
+          color: '#15803d',
+          fillColor: '#22c55e',
+          fillOpacity: 0.12,
+          weight: 3,
+          dashArray: '8, 8'
+        }).addTo(map);
+      } else {
+        layersRef.current.radiusCircle.setLatLng(latlng);
+        layersRef.current.radiusCircle.setRadius(radiusKm * 1000);
+      }
+    } else if (layersRef.current.radiusCircle) {
+      map.removeLayer(layersRef.current.radiusCircle);
+      layersRef.current.radiusCircle = null;
     }
   }, [userLocation, useRadiusFilter, radiusKm]);
 

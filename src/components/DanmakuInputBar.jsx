@@ -32,8 +32,8 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
   const handleDragMove = (clientY) => {
     if (!isDraggingRef.current) return;
     const deltaY = clientY - startYRef.current;
-    // 限制拖動範圍在向上 -450px 到向下 30px 之間
-    const newOffset = Math.min(30, Math.max(-450, initialOffsetRef.current + deltaY));
+    // 限制拖動範圍在向上 -450px 到向下 0px 之間 (絕不覆蓋底部導覽列)
+    const newOffset = Math.min(0, Math.max(-450, initialOffsetRef.current + deltaY));
     setOffsetY(newOffset);
   };
 

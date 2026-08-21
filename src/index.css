@@ -18,12 +18,20 @@
   background-color: #f1f5f9 !important; /* 淺灰色輕量高對比底圖 */
 }
 
+/* 📌 修正 Leaflet 縮放地圖時 Popup 浮窗短暫消失閃爍 Bug (GPU 轉場加速) */
+.leaflet-popup {
+  transition: transform 0.12s ease-out, opacity 0.12s linear !important;
+  will-change: transform, opacity !important;
+  pointer-events: auto !important;
+}
+
 .leaflet-popup-content-wrapper {
   background-color: #1e293b !important;
   color: #f8fafc !important;
   border-radius: 1rem !important;
   border: 2px solid #475569 !important;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  transform: translateZ(0);
 }
 
 .leaflet-popup-tip {
