@@ -293,16 +293,23 @@ export default function SafeMap({
       center: [25.0645, 121.6570],
       zoom: 14,
       zoomControl: false,
-      preferCanvas: true, // 📌 啟用 HTML5 Canvas 向量硬體加速渲染 (徹底消除雙指縮放卡頓)
-      fadeAnimation: false,
+      preferCanvas: false, // 📌 採用高穩定度 SVG 向量渲染，滾輪縮放時範圍圈與警示區 100% 永不消失
+      zoomSnap: 0.25,      // 📌 支援細膩平滑縮放
+      zoomDelta: 0.5,
+      wheelPxPerZoomLevel: 100, // 📌 減緩滾輪快速滾動衝擊
+      wheelDebounceTime: 60,
       zoomAnimation: true,
-      markerZoomAnimation: true,
-      bounceAtZoomLimits: false,
-      wheelDebounceTime: 40
+      fadeAnimation: true,
+      markerZoomAnimation: true
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      minZoom: 5,
       maxZoom: 19,
+      maxNativeZoom: 19,
+      keepBuffer: 8,       // 📌 預載快取周邊 8 格圖磚，滾輪縮放時絕不出現灰底破圖
+      updateWhenZooming: true,
+      updateWhenIdle: false,
       subdomains: 'abcd',
       attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap contributors | 雙北桃園安全避難網'
     }).addTo(map);

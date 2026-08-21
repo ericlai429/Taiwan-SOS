@@ -28,7 +28,7 @@
   background-color: #f1f5f9 !important; /* 淺灰色輕量高對比底圖 */
 }
 
-/* 📌 修正 Leaflet 移動與縮放地圖時，地點文字與 Popup 浮窗短暫消失閃爍 Bug (GPU 轉場硬體加速) */
+/* 📌 修正 Leaflet 移動與縮放地圖時，地點文字、向量範圍圈與圖磚短暫消失閃爍 Bug */
 .leaflet-marker-icon,
 .leaflet-marker-shadow,
 .smart-dot-icon,
@@ -39,14 +39,17 @@
 .facility-icon,
 .shelter-icon,
 .med-icon,
-.sup-icon {
+.sup-icon,
+.leaflet-pane > svg,
+.leaflet-tile-container {
   will-change: transform !important;
   transform: translateZ(0);
   backface-visibility: hidden !important;
   -webkit-backface-visibility: hidden !important;
 }
 
-.leaflet-zoom-anim .leaflet-zoom-animated {
+.leaflet-zoom-anim .leaflet-zoom-animated,
+.leaflet-pane > svg path {
   will-change: transform !important;
 }
 
