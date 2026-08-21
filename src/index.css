@@ -18,9 +18,31 @@
   background-color: #f1f5f9 !important; /* 淺灰色輕量高對比底圖 */
 }
 
-/* 📌 修正 Leaflet 縮放地圖時 Popup 浮窗短暫消失閃爍 Bug (GPU 轉場加速) */
+/* 📌 修正 Leaflet 移動與縮放地圖時，地點文字與 Popup 浮窗短暫消失閃爍 Bug (GPU 轉場硬體加速) */
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.smart-dot-icon,
+.smart-mini-icon,
+.smart-std-icon,
+.smart-full-icon,
+.custom-user-marker,
+.facility-icon,
+.shelter-icon,
+.med-icon,
+.sup-icon {
+  transition: opacity 0.05s linear !important;
+  will-change: transform, opacity !important;
+  transform-style: preserve-3d !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+  will-change: transform, opacity !important;
+}
+
 .leaflet-popup {
-  transition: transform 0.12s ease-out, opacity 0.12s linear !important;
+  transition: transform 0.1s ease-out, opacity 0.1s linear !important;
   will-change: transform, opacity !important;
   pointer-events: auto !important;
 }
@@ -35,7 +57,7 @@
 }
 
 .leaflet-popup-content {
-  color: #94a3b8 !important; /* 深灰色說明文字 (minimum 12px) */
+  color: #cbd5e1 !important; /* 質感淺灰色說明文字 (minimum 12px) */
   font-size: clamp(12px, 2.2vw, 15px) !important;
   font-weight: 500 !important;
   line-height: 1.5 !important;

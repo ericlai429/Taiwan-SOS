@@ -210,7 +210,9 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     const map = L.map(mapRef.current, {
       center: [25.0645, 121.6570],
       zoom: 14,
-      zoomControl: false
+      zoomControl: false,
+      fadeAnimation: false, // 停用淡出淡入動畫，防止地點文字與圖標在移動或縮放地圖時短暫消失
+      markerZoomAnimation: true
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
