@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Share2, Copy, Battery, MapPin, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Share2, Copy, Battery, MapPin, CheckCircle, AlertTriangle, Activity } from 'lucide-react';
 import { saveMessage } from '../services/storage';
+import { networkSync } from '../services/networkSync';
 
 export default function HeartbeatSOS({ userLocation, cipherCode }) {
   const [batteryLevel, setBatteryLevel] = useState('100%');
   const [safeStatus, setSafeStatus] = useState('safe'); // safe, need_help, in_shelter
   const [lastCheckin, setLastCheckin] = useState(null);
   const [copiedText, setCopiedText] = useState('');
+
+  useEffect(() => {
+    networkSync.setChannel(cipherCode);
+  }, [cipherCode]);
 
   useEffect(() => {
     if ('getBattery' in navigator) {
@@ -36,14 +41,17 @@ export default function HeartbeatSOS({ userLocation, cipherCode }) {
     const text = generateReportText();
     setLastCheckin(new Date().toLocaleTimeString());
 
-    // 自動廣播至群組對話
-    saveMessage({
+    const hbMsg = {
       id: 'hb-' + Date.now(),
       sender: '長輩平安心跳',
       text: text,
       isEncrypted: false,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    });
+    };
+
+    // 自動廣播至群組對話與跨裝置 MQTT 網路
+    saveMessage(hbMsg);
+    networkSync.broadcast('CHAT_MESSAGE', hbMsg);
 
     navigator.clipboard.writeText(text);
     setCopiedText('✅ 已紀錄平安心跳並自動複製訊息！可隨時貼上至 LINE 發送給親友。');

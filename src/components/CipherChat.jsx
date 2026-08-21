@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff, ShieldCheck } from 'lucide-react';
+import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff, ShieldCheck, Activity } from 'lucide-react';
 import { encryptMessage, decryptMessage } from '../services/crypto';
 import { getStoredCipherCode, setStoredCipherCode, getStoredMessages, saveMessage, appendDayTimeLog } from '../services/storage';
 import { sanitizeHTML, checkCipherStrength } from '../utils/security';
@@ -10,24 +10,52 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
   const [messages, setMessages] = useState([]);
   const [decryptedList, setDecryptedList] = useState([]);
   const [inputText, setInputText] = useState('');
+  const [onlinePeers, setOnlinePeers] = useState({});
 
-  // 📌 跨裝置 (手機 <-> 電腦/NB) 即時同步頻道設定與監聽
+  // 📌 跨裝置 (手機 <-> 電腦/NB) 即時同步頻道設定與監聽 (含 0.1 Hz 心跳頻率監測)
   useEffect(() => {
     networkSync.setChannel(cipherCode);
 
     const unsubscribe = networkSync.subscribe((payload) => {
-      if (payload && payload.type === 'CHAT_MESSAGE' && payload.data) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === payload.data.id)) return prev;
-          const updated = [...prev, payload.data];
-          saveMessage(payload.data);
-          return updated;
-        });
+      if (payload && payload.data) {
+        if (payload.type === 'CHAT_MESSAGE') {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === payload.data.id)) return prev;
+            const updated = [...prev, payload.data];
+            saveMessage(payload.data);
+            return updated;
+          });
+        } else if (payload.type === 'HEARTBEAT_PING') {
+          setOnlinePeers((prev) => ({
+            ...prev,
+            [payload.data.sender]: {
+              timestamp: payload.data.timestamp || Date.now(),
+              status: payload.data.status || '🟢 在線'
+            }
+          }));
+        }
       }
     });
 
     return () => unsubscribe();
   }, [cipherCode]);
+
+  // 📌 每 10 秒 (0.1 Hz 頻率) 自動廣播平安心跳脈衝訊號
+  useEffect(() => {
+    const sendPulse = () => {
+      if (currentSenderName) {
+        networkSync.broadcast('HEARTBEAT_PING', {
+          sender: currentSenderName,
+          timestamp: Date.now(),
+          status: '🟢 在線心跳中'
+        });
+      }
+    };
+
+    sendPulse();
+    const interval = setInterval(sendPulse, 10000);
+    return () => clearInterval(interval);
+  }, [cipherCode, currentSenderName]);
 
   // 📌 自動偵測/預設手機末 3 碼
   const [phone3Digits, setPhone3Digits] = useState(() => {
@@ -257,6 +285,39 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
         <div className="bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between">
           <span className="text-slate-400">當前廣播/聊天抬頭：</span>
           <strong className="text-cyan-300 font-mono font-bold text-[12px]">{currentSenderName}</strong>
+        </div>
+      </div>
+
+      {/* 📡 暗碼群組親友即時心跳 Hz 頻率動態面板 */}
+      <div className="bg-slate-900/90 border border-emerald-500/80 rounded-2xl p-3 space-y-1.5 text-xs shadow-md">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+          <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+            <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
+            <span>親友即時心跳頻率：</span>
+            <span className="text-emerald-300 font-mono font-extrabold text-[12px] bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-700">0.1 Hz (10s 刷新)</span>
+          </div>
+          <span className="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-600 font-bold flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            脈衝即時連線中
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
+          <span className="text-slate-400 font-bold">📡 在線親友心跳：</span>
+          {Object.keys(onlinePeers).length === 0 ? (
+            <span className="text-slate-500 italic">正在掃描暗碼群組親友心跳 Hz 脈衝...</span>
+          ) : (
+            Object.entries(onlinePeers).map(([peerName, peerData]) => {
+              const secAgo = Math.max(0, Math.floor((Date.now() - peerData.timestamp) / 1000));
+              if (secAgo > 35) return null;
+              return (
+                <span key={peerName} className="bg-slate-950 border border-emerald-600 px-2 py-0.5 rounded-lg text-emerald-300 font-bold font-mono text-[11px] flex items-center gap-1 shadow">
+                  <span>👤 {peerName}</span>
+                  <span className="text-[9px] text-emerald-400 font-normal">({secAgo}s前心跳)</span>
+                </span>
+              );
+            })
+          )}
         </div>
       </div>
 
