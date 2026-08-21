@@ -13,61 +13,61 @@ export default function SeniorNavbar({ activeTab, setActiveTab, btnLevel = 3 }) 
     { id: 'heartbeat', label: '平安心跳', icon: ShieldCheck, color: 'text-green-400' }
   ];
 
-  // 根據 5 級距 (25px ~ 60px) 動態計算底部導覽列按鈕樣式
+  // 根據 5 級距 (動態按鈕尺寸再縮小 50%) 計算底部導覽列按鈕樣式
   const getNavBtnConfig = (level) => {
     switch (level) {
       case 1:
         return {
-          minWidth: '44px',
+          minWidth: '32px',
+          minHeight: '22px',
+          iconClass: 'w-3 h-3',
+          textClass: 'text-[8px]',
+          containerClass: 'py-0 px-0.5 rounded-md gap-0',
+          showText: true
+        };
+      case 2:
+        return {
+          minWidth: '40px',
           minHeight: '28px',
           iconClass: 'w-3.5 h-3.5',
           textClass: 'text-[9px]',
           containerClass: 'py-0.5 px-1 rounded-lg gap-0',
           showText: true
         };
-      case 2:
-        return {
-          minWidth: '54px',
-          minHeight: '36px',
-          iconClass: 'w-4 h-4',
-          textClass: 'text-[10px]',
-          containerClass: 'py-1 px-1.5 rounded-xl gap-0.5',
-          showText: true
-        };
       case 3:
         return {
-          minWidth: '64px',
-          minHeight: '44px',
-          iconClass: 'w-4.5 h-4.5',
-          textClass: 'text-xs font-bold',
-          containerClass: 'py-1 px-2 rounded-xl gap-0.5',
+          minWidth: '48px',
+          minHeight: '34px',
+          iconClass: 'w-4 h-4',
+          textClass: 'text-[10px] font-bold',
+          containerClass: 'py-0.5 px-1 rounded-lg gap-0.5',
           showText: true
         };
       case 4:
         return {
-          minWidth: '74px',
-          minHeight: '54px',
-          iconClass: 'w-5.5 h-5.5',
-          textClass: 'text-senior-sm font-bold',
-          containerClass: 'py-1.5 px-2.5 rounded-2xl gap-1',
+          minWidth: '56px',
+          minHeight: '40px',
+          iconClass: 'w-4.5 h-4.5',
+          textClass: 'text-[11px] font-bold',
+          containerClass: 'py-1 px-1.5 rounded-xl gap-0.5',
           showText: true
         };
       case 5:
         return {
-          minWidth: '84px',
-          minHeight: '64px',
-          iconClass: 'w-6.5 h-6.5',
-          textClass: 'text-senior-base font-black',
-          containerClass: 'py-2 px-3 rounded-2xl gap-1',
+          minWidth: '64px',
+          minHeight: '46px',
+          iconClass: 'w-5 h-5',
+          textClass: 'text-xs font-black',
+          containerClass: 'py-1 px-2 rounded-xl gap-0.5',
           showText: true
         };
       default:
         return {
-          minWidth: '64px',
-          minHeight: '44px',
-          iconClass: 'w-4.5 h-4.5',
-          textClass: 'text-xs font-bold',
-          containerClass: 'py-1 px-2 rounded-xl gap-0.5',
+          minWidth: '48px',
+          minHeight: '34px',
+          iconClass: 'w-4 h-4',
+          textClass: 'text-[10px] font-bold',
+          containerClass: 'py-0.5 px-1 rounded-lg gap-0.5',
           showText: true
         };
     }
@@ -78,7 +78,7 @@ export default function SeniorNavbar({ activeTab, setActiveTab, btnLevel = 3 }) 
   // 橫向模式 (Landscape)
   if (isLandscape && isMobile) {
     return (
-      <nav className="fixed top-0 bottom-0 left-0 z-[2500] bg-slate-900/95 border-r border-slate-800 backdrop-blur-md px-1 py-1.5 flex flex-col justify-center gap-1.5 shadow-2xl">
+      <nav className="fixed top-0 bottom-0 left-0 z-[2500] bg-slate-900/95 border-r border-slate-800 backdrop-blur-md px-1 py-1 flex flex-col justify-center gap-1 shadow-2xl">
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -88,7 +88,7 @@ export default function SeniorNavbar({ activeTab, setActiveTab, btnLevel = 3 }) 
                 onClick={() => setActiveTab(t.id)}
                 className={`flex flex-col items-center justify-center transition-all active:scale-95 ${navCfg.containerClass} ${
                   isActive
-                    ? 'bg-slate-800 text-white font-bold border-2 border-emerald-500 shadow-md scale-105'
+                    ? 'bg-slate-800 text-white font-bold border border-emerald-500 shadow-md scale-105'
                     : 'text-slate-400 hover:text-slate-200 border border-transparent'
                 }`}
                 style={{ minWidth: navCfg.minWidth, minHeight: navCfg.minHeight }}
@@ -107,10 +107,10 @@ export default function SeniorNavbar({ activeTab, setActiveTab, btnLevel = 3 }) 
     );
   }
 
-  // 直向模式 (Portrait)：標準底部橫向導覽列 (匹配 5 級距按鈕切換，z-[2500] 防遮擋)
+  // 直向模式 (Portrait)：精簡小型底部橫向導覽列 (按鈕尺寸縮小 50%，z-[2500] 防遮擋)
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[2500] bg-slate-900/95 border-t border-slate-800 backdrop-blur-md px-1.5 py-1">
-      <div className="max-w-xl mx-auto flex justify-around items-center">
+    <nav className="fixed bottom-0 left-0 right-0 z-[2500] bg-slate-900/95 border-t border-slate-800 backdrop-blur-md px-1 py-0.5">
+      <div className="max-w-md mx-auto flex justify-around items-center">
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -120,7 +120,7 @@ export default function SeniorNavbar({ activeTab, setActiveTab, btnLevel = 3 }) 
                 onClick={() => setActiveTab(t.id)}
                 className={`flex flex-col items-center justify-center transition-all duration-200 active:scale-95 ${navCfg.containerClass} ${
                   isActive
-                    ? 'bg-slate-800 text-white font-bold border-2 border-emerald-500 shadow-md scale-105'
+                    ? 'bg-slate-800 text-white font-bold border border-emerald-500 shadow-md scale-105'
                     : 'text-slate-400 hover:text-slate-200 border border-transparent'
                 }`}
                 style={{ minWidth: navCfg.minWidth, minHeight: navCfg.minHeight }}
