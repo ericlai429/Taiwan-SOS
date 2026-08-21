@@ -110,13 +110,13 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
 
       <form
         onSubmit={handleSend}
-        className="w-full bg-slate-900/95 border-b-2 border-x-2 border-cyan-500/80 rounded-b-2xl p-2 shadow-2xl backdrop-blur-md flex items-center gap-2 text-white"
+        className="w-full bg-slate-900/95 border-b-2 border-x-2 border-cyan-500/80 rounded-b-2xl p-1.5 shadow-2xl backdrop-blur-md flex items-center gap-1.5 text-white"
       >
-        <div className="p-2 bg-cyan-950 border border-cyan-600 rounded-xl text-cyan-400 shrink-0 flex items-center justify-center">
-          <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
+        <div className="p-1.5 bg-cyan-950 border border-cyan-600 rounded-lg text-cyan-400 shrink-0 flex items-center justify-center">
+          <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
         </div>
 
-        {/* 寬敞輸入框 */}
+        {/* 精簡型廣播輸入框 (縮小 50%) */}
         <input
           type="text"
           value={text}
@@ -124,14 +124,14 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
           onChange={(e) => setText(e.target.value)}
           placeholder={cooldownSec > 0 ? `請等待倒數冷卻 (${cooldownSec}s)...` : "廣播發話 (如：台北車站備有水源)..."}
           disabled={cooldownSec > 0}
-          className="flex-1 bg-slate-950 text-white placeholder-slate-400 text-senior-base font-bold px-3.5 py-2 h-11 rounded-xl border-2 border-slate-700 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 disabled:opacity-50 transition-all min-w-0"
+          className="flex-1 bg-slate-950 text-white placeholder-slate-400 text-xs font-semibold px-2.5 py-1 h-8 rounded-lg border border-slate-700 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 disabled:opacity-50 transition-all min-w-0"
         />
 
-        {/* 發射按鈕 */}
+        {/* 精簡型發射按鈕 (縮小 50%) */}
         <button
           type="submit"
           disabled={!text.trim() || cooldownSec > 0}
-          className={`h-11 px-3.5 rounded-xl font-black text-senior-base flex items-center gap-1.5 shadow-lg border transition-all shrink-0 active:scale-95 ${
+          className={`h-8 px-2.5 rounded-lg font-bold text-xs flex items-center gap-1 shadow-md border transition-all shrink-0 active:scale-95 ${
             cooldownSec > 0
               ? 'bg-slate-800 border-slate-700 text-amber-400 cursor-not-allowed'
               : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-cyan-300 text-white'
@@ -139,12 +139,12 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
         >
           {cooldownSec > 0 ? (
             <>
-              <Clock className="w-4 h-4 text-amber-400 animate-spin" />
-              <span className="font-mono">{cooldownSec}s</span>
+              <Clock className="w-3 h-3 text-amber-400 animate-spin" />
+              <span className="font-mono text-[11px]">{cooldownSec}s</span>
             </>
           ) : (
             <>
-              <Send className="w-4 h-4" />
+              <Send className="w-3 h-3" />
               <span>發射</span>
             </>
           )}
