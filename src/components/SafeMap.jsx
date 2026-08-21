@@ -152,16 +152,14 @@ export default function SafeMap({
 
   const [navTarget, setNavTarget] = useState(null);
 
-  // 切換全台 22 縣市跳轉
+  // 切換全台 22 縣市跳轉 (僅平移視野，絕不竄改使用者真實 GPS 座標)
   const handleSelectCounty = useCallback((county) => {
     setSelectedCountyId(county.id);
-    const newLoc = { lat: county.lat, lng: county.lng };
-    setUserLocation(newLoc);
     const map = mapInstanceRef.current;
     if (map) {
       map.flyTo([county.lat, county.lng], 13, { animate: true });
     }
-  }, [setUserLocation]);
+  }, []);
 
   // 🌏 切換 5 大區域視野 (全區 ➔ 北區 ➔ 中區 ➔ 南區 ➔ 東區 輪播)
   const handleSelectRegion = useCallback((region) => {
@@ -322,7 +320,15 @@ export default function SafeMap({
 
     mapInstanceRef.current = map;
 
+    // 📌 確保換頁切換時 Leaflet 自動校正全視窗邊界尺寸
+    const timer = setTimeout(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    }, 150);
+
     return () => {
+      clearTimeout(timer);
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -343,7 +349,7 @@ export default function SafeMap({
         setGpsActive(true);
       },
       (err) => console.warn('GPS watch error:', err),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
@@ -998,7 +1004,7 @@ export default function SafeMap({
   const { isLandscape, isMobile } = useViewport();
 
   return (
-    <div className="relative w-full h-[calc(var(--vh,1vh)*100-60px)] overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden">
       {navTarget && (
         <NavigationCard
           target={navTarget}
@@ -1014,10 +1020,9 @@ export default function SafeMap({
 
       {/* 🛡️ 智能網格分區 1：頂部全台 22 縣市定位與災害圖例列 (右側預留 right-14 避開地圖 +/- 縮放按鈕) */}
       <div
-        className={`absolute z-[990] max-w-md space-y-1.5 transition-all ${
+        className={`absolute top-2.5 z-[990] max-w-md space-y-1.5 transition-all ${
           isLandscape && isMobile ? 'left-16 right-14' : 'left-[2vw] right-14 sm:right-auto'
         }`}
-        style={{ top: 'max(12px, env(safe-area-inset-top, 12px))' }}
       >
         <CountySelector
           selectedCountyId={selectedCountyId}

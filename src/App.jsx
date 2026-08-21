@@ -41,7 +41,7 @@ export default function App() {
     const saved = getStoredCipherCode();
     if (saved) setCipherCode(saved);
 
-    // 全域自動獲取一次真實 GPS 座標
+    // 全域自動獲取一次真實 GPS 座標 (強制 maximumAge: 0 與高精準度，避免回傳板橋/機房舊快取)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -50,11 +50,18 @@ export default function App() {
             lng: pos.coords.longitude
           });
         },
-        () => {},
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+        (err) => console.warn('初始 GPS 定位提示:', err),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
   }, []);
+
+  // 📌 每次切換分頁時，立即重設全域視窗捲動為 (0,0)，防止長頁面捲動偏移帶入地圖造成頂部排版錯位
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [activeTab]);
 
   // 循環切換 5 個按鈕級距 (25px -> 33px -> 42px -> 50px -> 60px -> 輪播)
   const cycleBtnLevel = () => {
@@ -78,7 +85,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none pb-28 sm:pb-24">
+    <div className={`bg-slate-950 text-slate-100 flex flex-col font-sans select-none ${
+      activeTab === 'map'
+        ? 'h-[100dvh] overflow-hidden fixed inset-0'
+        : 'min-h-screen pb-28 sm:pb-24'
+    }`}>
       {/* 頂部長輩高對比標頭 (嚴禁任何按鈕擠出螢幕) */}
       {/* 📌 safe-area-inset-top 自動偵測動態島/劉海/狀態列高度 (iPhone 14 Pro=59px, 劉海=44px, 無缺口=0px) + 2% 邊緣距離防護 */}
       <header
@@ -168,8 +179,12 @@ export default function App() {
         </div>
       </header>
 
-      {/* 主頁面內容 (2% 邊緣距離防護) */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-[2vw]">
+      {/* 主頁面內容 */}
+      <main className={`flex-1 w-full ${
+        activeTab === 'map'
+          ? 'relative h-full overflow-hidden'
+          : 'max-w-4xl mx-auto px-[2vw] overflow-y-auto'
+      }`}>
         {activeTab === 'map' && (
           <SafeMap
             cipherCode={cipherCode}
