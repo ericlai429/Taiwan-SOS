@@ -161,6 +161,7 @@ export default function App() {
         {activeTab === 'resources' && (
           <ResourceList
             onSelectDestination={handleSelectDestination}
+            btnLevel={btnLevel}
           />
         )}
 
