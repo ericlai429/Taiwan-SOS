@@ -306,7 +306,7 @@ export default function SafeMap({
       attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap contributors | 雙北桃園安全避難網'
     }).addTo(map);
 
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.control.zoom({ position: 'topright' }).addTo(map);
 
     layersRef.current.sheltersGroup = L.layerGroup().addTo(map);
     layersRef.current.medicalGroup = L.layerGroup().addTo(map);
@@ -1043,8 +1043,12 @@ export default function SafeMap({
         />
       </div>
 
-      {/* 🛡️ 智能網格分區 2：廣播發話列 (畫面中央置中，支援上下自由拖動) */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[990] w-full max-w-lg px-3 transition-all pointer-events-auto flex flex-col gap-2">
+      {/* 🛡️ 智能網格分區 2：廣播發話列 (避開右側功能欄，支援上下自由拖動) */}
+      <div className={`absolute bottom-3 z-[990] transition-all pointer-events-auto flex flex-col gap-2 ${
+        isLandscape && isMobile
+          ? 'left-16 right-3 max-w-lg'
+          : 'left-2 right-14 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:right-auto sm:px-3'
+      }`}>
         {showInvasion && (
           <InvasionPlaybackBar
             currentStepIndex={currentInvasionStep}
@@ -1056,7 +1060,7 @@ export default function SafeMap({
 
       {/* 🛡️ 智能網格分區 3：右側側邊功能欄 (獨立動態定位，絕對零遮擋) */}
       <div className={`absolute bottom-3 z-[995] flex flex-col gap-1.5 transition-all ${
-        isLandscape && isMobile ? 'left-16' : 'right-3'
+        isLandscape && isMobile ? 'left-16' : 'right-2'
       }`}>
         {/* 1. 我的位置 */}
         <Tooltip text="我的位置：重新定位至 GPS 動態座標" position="left">
