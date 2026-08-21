@@ -40,7 +40,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     return () => unsubscribe();
   }, [cipherCode]);
 
-  // 📌 每 10 秒 (0.1 Hz 頻率) 自動廣播平安心跳脈衝訊號
+  // 📌 每 3 分鐘 (180 秒固定頻率，防過度密集) 自動廣播平安心跳脈衝訊號
   useEffect(() => {
     const sendPulse = () => {
       if (currentSenderName) {
@@ -53,7 +53,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     };
 
     sendPulse();
-    const interval = setInterval(sendPulse, 10000);
+    const interval = setInterval(sendPulse, 180000); // 3 分鐘固定頻率
     return () => clearInterval(interval);
   }, [cipherCode, currentSenderName]);
 
@@ -288,32 +288,32 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
         </div>
       </div>
 
-      {/* 📡 暗碼群組親友即時心跳 Hz 頻率動態面板 */}
+      {/* 📡 暗碼群組親友即時心跳頻率動態面板 (固定每 3 分鐘) */}
       <div className="bg-slate-900/90 border border-emerald-500/80 rounded-2xl p-3 space-y-1.5 text-xs shadow-md">
         <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
           <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
             <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
             <span>親友即時心跳頻率：</span>
-            <span className="text-emerald-300 font-mono font-extrabold text-[12px] bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-700">0.1 Hz (10s 刷新)</span>
+            <span className="text-emerald-300 font-mono font-extrabold text-[12px] bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-700">3 分鐘 Pulse (180s 刷新)</span>
           </div>
           <span className="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-600 font-bold flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-            脈衝即時連線中
+            脈衝定時連線中
           </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
           <span className="text-slate-400 font-bold">📡 在線親友心跳：</span>
           {Object.keys(onlinePeers).length === 0 ? (
-            <span className="text-slate-500 italic">正在掃描暗碼群組親友心跳 Hz 脈衝...</span>
+            <span className="text-slate-500 italic">正在掃描暗碼群組親友心跳 (每3分鐘脈衝)...</span>
           ) : (
             Object.entries(onlinePeers).map(([peerName, peerData]) => {
               const secAgo = Math.max(0, Math.floor((Date.now() - peerData.timestamp) / 1000));
-              if (secAgo > 35) return null;
+              if (secAgo > 360) return null; // 6 分鐘無訊號視為離線
               return (
                 <span key={peerName} className="bg-slate-950 border border-emerald-600 px-2 py-0.5 rounded-lg text-emerald-300 font-bold font-mono text-[11px] flex items-center gap-1 shadow">
                   <span>👤 {peerName}</span>
-                  <span className="text-[9px] text-emerald-400 font-normal">({secAgo}s前心跳)</span>
+                  <span className="text-[9px] text-emerald-400 font-normal">({Math.floor(secAgo / 60)}分{secAgo % 60}秒前心跳)</span>
                 </span>
               );
             })
