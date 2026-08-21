@@ -908,10 +908,45 @@ export default function SafeMap({
         const icon = L.divIcon({
           className: 'flag-icon cursor-grab active:cursor-grabbing',
           html: isUnlocked
-            ? `<div class="bg-rose-600 text-white font-black px-2 py-1 rounded-xl shadow-lg border-2 border-amber-300 text-xs flex items-center gap-1">🚩 ${flag.title} <span class="text-[9px] text-amber-200 opacity-90">(可拖曳)</span></div>`
-            : `<div class="bg-slate-700 text-amber-400 font-bold px-2 py-1 rounded-xl shadow-lg border-2 border-slate-500 text-xs">🔒 暗碼旗標</div>`,
-          iconSize: [140, 32],
-          iconAnchor: [70, 16]
+            ? `<div class="relative flex flex-col items-center select-none" style="width:150px; height:60px;">
+                <div class="bg-rose-600 text-white font-black px-2 py-1 rounded-xl shadow-2xl border-2 border-amber-300 text-xs flex items-center justify-center gap-1 whitespace-nowrap z-20">
+                  <span>🚩</span>
+                  <span class="truncate max-w-[95px]">${flag.title}</span>
+                  <span class="text-[10px] text-amber-200 font-black shrink-0 animate-bounce">↓</span>
+                </div>
+                <div class="relative flex flex-col items-center -mt-0.5 z-10">
+                  <div class="w-6 h-6 flex items-center justify-center animate-cone-3d">
+                    <svg viewBox="0 0 24 24" width="22" height="22" class="drop-shadow-lg">
+                      <polygon points="12,22 4,5 12,2" fill="#ff1744" />
+                      <polygon points="12,22 20,5 12,2" fill="#991b1b" />
+                      <polygon points="12,2 4,5 20,5" fill="#facc15" />
+                      <line x1="12" y1="2" x2="12" y2="23" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.9" />
+                    </svg>
+                  </div>
+                  <div class="absolute -bottom-1 w-3 h-1.5 bg-rose-500 rounded-full opacity-80 animate-ping"></div>
+                  <div class="absolute -bottom-0.5 w-1.5 h-1.5 bg-amber-300 rounded-full border border-white shadow"></div>
+                </div>
+              </div>`
+            : `<div class="relative flex flex-col items-center select-none" style="width:140px; height:50px;">
+                <div class="bg-slate-800 text-amber-400 font-black px-2 py-1 rounded-xl shadow-xl border-2 border-slate-600 text-xs flex items-center gap-1 whitespace-nowrap z-20">
+                  <span>🔒</span>
+                  <span>暗碼旗標</span>
+                  <span class="text-[10px] text-amber-300 font-bold shrink-0">↓</span>
+                </div>
+                <div class="relative flex flex-col items-center -mt-0.5 z-10">
+                  <div class="w-5 h-5 flex items-center justify-center animate-cone-3d">
+                    <svg viewBox="0 0 24 24" width="18" height="18">
+                      <polygon points="12,22 4,5 12,2" fill="#eab308" />
+                      <polygon points="12,22 20,5 12,2" fill="#78350f" />
+                      <line x1="12" y1="2" x2="12" y2="23" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                  </div>
+                  <div class="absolute -bottom-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full"></div>
+                </div>
+              </div>`,
+          iconSize: [150, 60],
+          iconAnchor: [75, 60],
+          popupAnchor: [0, -60]
         });
 
         const marker = L.marker([flag.lat, flag.lng], {
@@ -919,7 +954,7 @@ export default function SafeMap({
           draggable: Boolean(isUnlocked)
         }).bindPopup(
           isUnlocked
-            ? `<div style="padding:4px;"><h4 style="font-weight:bold; color:#dc2626; margin:0 0 4px 0;">🚩 ${flag.title}</h4><p style="margin:2px 0;">${flag.description || '自訂危險點位'}</p><p style="font-size:10px; color:#38bdf8; margin-top:4px; font-weight:bold;">💡 提示：按住旗標可手動拖曳重新定位</p></div>`
+            ? `<div style="padding:4px;"><h4 style="font-weight:bold; color:#dc2626; margin:0 0 4px 0;">🚩 ${flag.title}</h4><p style="margin:2px 0;">${flag.description || '自訂危險點位'}</p><p style="font-size:10px; color:#38bdf8; margin-top:4px; font-weight:bold;">💡 提示：按住下方紅色尖錐可手動拖曳重新定位</p></div>`
             : `<div style="padding:4px;"><h4 style="color:#d97706;">🔒 暗碼保護情報</h4></div>`,
           { autoPan: false, keepInView: true }
         );

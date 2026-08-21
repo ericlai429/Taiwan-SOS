@@ -138,3 +138,22 @@
   animation: spin-slow 8s linear infinite;
   will-change: transform;
 }
+
+/* 🔻 3D 紅色立體旋轉三角錐動畫 (精準指向地面座標點) */
+@keyframes cone-rotate-3d {
+  0% {
+    transform: rotateY(0deg) translateY(0);
+  }
+  50% {
+    transform: rotateY(180deg) translateY(-3px);
+  }
+  100% {
+    transform: rotateY(360deg) translateY(0);
+  }
+}
+
+.animate-cone-3d {
+  animation: cone-rotate-3d 2.5s ease-in-out infinite;
+  transform-origin: center bottom;
+  will-change: transform;
+}
