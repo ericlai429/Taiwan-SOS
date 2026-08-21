@@ -645,39 +645,55 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     }
   }, [showUtility, showBlockade, showCasualty, showMissile, showCoastal, showInvasion, currentInvasionStep, decryptedCustomHazards]);
 
-  // 📌 1. 動態計算 5 級距點位標籤 (與 5 級縮放按鈕完全連動，徹底解決卡片全擠在一起 Bug)
-  const createSmartMarkerIcon = (iconSymbol, name, badgeColor, level) => {
+  // 📌 1. 動態計算 5 級距點位標籤 (地點名稱文字為深灰色 text-slate-900，與 5 級縮放按鈕連動)
+  const createSmartMarkerIcon = (iconSymbol, name, category, level) => {
+    const borderColor =
+      category === 'shelter' ? 'border-emerald-600' :
+      category === 'medical' ? 'border-rose-600' :
+      category === 'supplies' ? 'border-amber-600' :
+      category === 'police' ? 'border-blue-600' :
+      category === 'fire' ? 'border-orange-600' :
+      category === 'community' ? 'border-purple-600' : 'border-teal-600';
+
+    const dotBg =
+      category === 'shelter' ? 'bg-emerald-600' :
+      category === 'medical' ? 'bg-rose-600' :
+      category === 'supplies' ? 'bg-amber-600' :
+      category === 'police' ? 'bg-blue-600' :
+      category === 'fire' ? 'bg-orange-600' :
+      category === 'community' ? 'bg-purple-600' : 'bg-teal-600';
+
     if (level === 1) {
       // 微型 25px: 極簡圓形圖示 (0% 遮擋)
       return L.divIcon({
         className: 'smart-dot-icon',
-        html: `<div class="${badgeColor} text-white font-black w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-xs shadow-xl transition-all active:scale-125 hover:scale-110">${iconSymbol}</div>`,
+        html: `<div class="${dotBg} text-white font-black w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-xs shadow-xl transition-all active:scale-125 hover:scale-110">${iconSymbol}</div>`,
         iconSize: [28, 28],
         iconAnchor: [14, 14]
       });
     } else if (level === 2) {
-      // 精簡 33px: 微型膠囊 4 字簡稱
+      // 精簡 33px: 微型高對比白底膠囊 + 深灰色地點文字說明
       const shortName = name.length > 5 ? name.substring(0, 4) + '..' : name;
       return L.divIcon({
         className: 'smart-mini-icon',
-        html: `<div class="${badgeColor} text-white font-extrabold px-1.5 py-0.5 rounded-full border border-white text-[11px] shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
+        html: `<div class="bg-slate-100 text-slate-900 font-extrabold px-1.5 py-0.5 rounded-full border-2 ${borderColor} text-[11px] shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
         iconSize: [75, 24],
         iconAnchor: [37, 12]
       });
     } else if (level === 3) {
-      // 標準 42px: 6 字簡稱
+      // 標準 42px: 高對比白底膠囊 + 深灰色地點文字說明
       const shortName = name.length > 8 ? name.substring(0, 7) + '..' : name;
       return L.divIcon({
         className: 'smart-std-icon',
-        html: `<div class="${badgeColor} text-white font-extrabold px-2 py-1 rounded-xl border border-white text-xs shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
+        html: `<div class="bg-slate-100 text-slate-900 font-extrabold px-2 py-1 rounded-xl border-2 ${borderColor} text-xs shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
         iconSize: [110, 28],
         iconAnchor: [55, 14]
       });
     } else {
-      // 長輩 / 特大 50px~60px: 完整名稱
+      // 長輩 / 特大 50px~60px: 高對比白底膠囊 + 完整深灰色地點文字說明
       return L.divIcon({
         className: 'smart-full-icon',
-        html: `<div class="${badgeColor} text-white font-black px-2.5 py-1.5 rounded-xl border-2 border-white text-senior-sm shadow-xl flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${name}</div>`,
+        html: `<div class="bg-slate-100 text-slate-900 font-black px-2.5 py-1.5 rounded-xl border-2 ${borderColor} text-senior-sm shadow-xl flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${name}</div>`,
         iconSize: [145, 34],
         iconAnchor: [72, 17]
       });
@@ -725,17 +741,12 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     layersRef.current.facilitiesGroup.clearLayers();
     if (showFacilities) {
       filteredFacilities.forEach((item, idx) => {
-        const badgeColor =
-          item.type === 'police' ? 'bg-blue-600' :
-          item.type === 'fire' ? 'bg-orange-600' :
-          item.type === 'community' ? 'bg-purple-600' : 'bg-teal-600';
-
         const iconSymbol =
           item.type === 'police' ? '👮' :
           item.type === 'fire' ? '🚒' :
           item.type === 'community' ? '🏛️' : '🩺';
 
-        const icon = createSmartMarkerIcon(iconSymbol, item.name, badgeColor, btnLevel);
+        const icon = createSmartMarkerIcon(iconSymbol, item.name, item.type || 'police', btnLevel);
         const pos = getOffsetLatLng(filteredFacilities, idx);
 
         const marker = L.marker(pos, { icon })
@@ -763,7 +774,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     layersRef.current.sheltersGroup.clearLayers();
     if (showShelters) {
       filteredShelters.forEach((item, idx) => {
-        const icon = createSmartMarkerIcon('🛡️', item.name, 'bg-emerald-600', btnLevel);
+        const icon = createSmartMarkerIcon('🛡️', item.name, 'shelter', btnLevel);
         const pos = getOffsetLatLng(filteredShelters, idx);
 
         const marker = L.marker(pos, { icon })
@@ -788,7 +799,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     layersRef.current.medicalGroup.clearLayers();
     if (showMedical) {
       filteredMedical.forEach((item, idx) => {
-        const icon = createSmartMarkerIcon('🏥', item.name, 'bg-rose-600', btnLevel);
+        const icon = createSmartMarkerIcon('🏥', item.name, 'medical', btnLevel);
         const pos = getOffsetLatLng(filteredMedical, idx);
 
         const marker = L.marker(pos, { icon })
@@ -813,7 +824,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     layersRef.current.suppliesGroup.clearLayers();
     if (showSupplies) {
       filteredSupplies.forEach((item, idx) => {
-        const icon = createSmartMarkerIcon('📦', item.name, 'bg-amber-600', btnLevel);
+        const icon = createSmartMarkerIcon('📦', item.name, 'supplies', btnLevel);
         const pos = getOffsetLatLng(filteredSupplies, idx);
 
         const marker = L.marker(pos, { icon })
