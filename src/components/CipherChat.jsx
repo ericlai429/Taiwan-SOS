@@ -11,10 +11,16 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
   const [decryptedList, setDecryptedList] = useState([]);
   const [inputText, setInputText] = useState('');
   const [onlinePeers, setOnlinePeers] = useState({});
+  const [netStatus, setNetStatus] = useState(networkSync.isConnected);
 
-  // 📌 跨裝置 (手機 <-> 電腦/NB) 即時同步頻道設定與監聽 (含 0.1 Hz 心跳頻率監測)
+  // 📌 跨裝置 (手機 <-> 電腦/NB) 即時同步頻道設定與監聽 (含 3 分鐘心跳與狀態監測)
   useEffect(() => {
     networkSync.setChannel(cipherCode);
+    setNetStatus(networkSync.isConnected);
+
+    const checkTimer = setInterval(() => {
+      setNetStatus(networkSync.isConnected);
+    }, 1500);
 
     const unsubscribe = networkSync.subscribe((payload) => {
       if (payload && payload.data) {
@@ -37,7 +43,10 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearInterval(checkTimer);
+      unsubscribe();
+    };
   }, [cipherCode]);
 
   // 📌 每 3 分鐘 (180 秒固定頻率，防過度密集) 自動廣播平安心跳脈衝訊號
@@ -192,12 +201,108 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
         </div>
 
         <form onSubmit={handleSaveCipher} className="space-y-1.5">
-          <div className="flex gap-2">
+          {/* 📡 100 頻道房間快速選擇列 (每 1, 10, 20, 30 為公共大頻) */}
+          <div className="bg-slate-900/90 p-2 rounded-xl border border-slate-700 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between font-bold text-slate-300">
+              <span className="flex items-center gap-1 text-cyan-300">
+                <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                <span>萬人分流房間 (1~100 頻道)</span>
+              </span>
+              <span className="text-[10px] text-slate-400">大容量萬人高併發</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-[11px] font-bold">
+              <button
+                type="button"
+                onClick={() => {
+                  setInputCode('CH-01');
+                  setCipherCode('CH-01');
+                  setStoredCipherCode('CH-01');
+                }}
+                className={`p-1.5 rounded-lg border text-center transition-all ${
+                  cipherCode === 'CH-01' ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-extrabold shadow' : 'bg-slate-800 border-slate-700 text-slate-300'
+                }`}
+              >
+                📢 CH-01 公共大頻
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setInputCode('CH-10');
+                  setCipherCode('CH-10');
+                  setStoredCipherCode('CH-10');
+                }}
+                className={`p-1.5 rounded-lg border text-center transition-all ${
+                  cipherCode === 'CH-10' ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-extrabold shadow' : 'bg-slate-800 border-slate-700 text-slate-300'
+                }`}
+              >
+                🛡️ CH-10 雙北防衛
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setInputCode('CH-20');
+                  setCipherCode('CH-20');
+                  setStoredCipherCode('CH-20');
+                }}
+                className={`p-1.5 rounded-lg border text-center transition-all ${
+                  cipherCode === 'CH-20' ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-extrabold shadow' : 'bg-slate-800 border-slate-700 text-slate-300'
+                }`}
+              >
+                🌊 CH-20 桃基海岸
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setInputCode('CH-30');
+                  setCipherCode('CH-30');
+                  setStoredCipherCode('CH-30');
+                }}
+                className={`p-1.5 rounded-lg border text-center transition-all ${
+                  cipherCode === 'CH-30' ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-extrabold shadow' : 'bg-slate-800 border-slate-700 text-slate-300'
+                }`}
+              >
+                📦 CH-30 物資醫療
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5 pt-0.5">
+              <span className="text-[11px] text-slate-400 shrink-0">切換 1~100 頻道：</span>
+              <select
+                value={cipherCode.startsWith('CH-') ? cipherCode : 'custom'}
+                onChange={(e) => {
+                  if (e.target.value !== 'custom') {
+                    setInputCode(e.target.value);
+                    setCipherCode(e.target.value);
+                    setStoredCipherCode(e.target.value);
+                  }
+                }}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-amber-300 focus:border-cyan-400 focus:outline-none"
+              >
+                <option value="custom">🔒 自訂私密暗碼 (親友專屬)</option>
+                {Array.from({ length: 100 }, (_, i) => {
+                  const chNum = String(i + 1).padStart(2, '0');
+                  const chCode = `CH-${chNum}`;
+                  const isPublic = [1, 10, 20, 30].includes(i + 1);
+                  return (
+                    <option key={chCode} value={chCode}>
+                      {chCode} 頻道 {isPublic ? '★ [公共大頻]' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-1">
             <input
               type="text"
               value={inputCode}
               onChange={(e) => setInputCode(e.target.value)}
-              placeholder="請輸入親友約定暗碼"
+              placeholder="請輸入親友約定暗碼或頻道 (如: CH-01 / FAMILY888)"
               className="flex-1 min-w-0 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-[15px] font-bold text-amber-300 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
             />
             <button
@@ -211,6 +316,13 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
           <div className="flex items-center justify-between text-[11px] px-1 font-bold">
             <span className="text-slate-400">暗碼強度評估：</span>
             <span className={strength.color}>{strength.label}</span>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] px-1 font-bold pt-0.5">
+            <span className="text-slate-400">跨裝置 (手機 ↔ 電腦) 實體對齊：</span>
+            <span className={netStatus ? 'text-emerald-400 font-mono' : 'text-amber-400 font-mono'}>
+              {netStatus ? '🟢 統一通道連線中 (EMQX 8084)' : '🟡 網路連線切換中...'}
+            </span>
           </div>
         </form>
 
