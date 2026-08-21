@@ -2,13 +2,15 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import L from 'leaflet';
 import { Compass, Filter, Flag, Calendar, ShieldAlert, Navigation, Lock, CircleDot, Zap, Ban, Flame, Share2 } from 'lucide-react';
 import { filterWithinRadius } from '../services/geo';
-import { getStoredDangerFlags, getStoredCustomHazardZones } from '../services/storage';
+import { getStoredDangerFlags, getStoredCustomHazardZones, updateDangerFlagLocation } from '../services/storage';
 import { decryptDangerFlag, decryptHazardZone } from '../services/crypto';
+import { getIntelCredibility, voteIntelTruth } from '../services/intelService';
 import NavigationCard from './NavigationCard';
 import AddDangerFlagModal from './AddDangerFlagModal';
 import AddHazardZoneModal from './AddHazardZoneModal';
 import DailyIntelModal from './DailyIntelModal';
 import HazardLegendCard from './HazardLegendCard';
+import IntelCrawlerModal from './IntelCrawlerModal';
 import { useViewport } from '../services/useViewport';
 
 import sheltersData from '../data/shelters.json';
@@ -284,6 +286,18 @@ export default function SafeMap({
   const [isAddHazardOpen, setIsAddHazardOpen] = useState(false);
   const [isDailyIntelOpen, setIsDailyIntelOpen] = useState(false);
   const [isGPSShareOpen, setIsGPSShareOpen] = useState(false);
+  const [isIntelCrawlerOpen, setIsIntelCrawlerOpen] = useState(false);
+
+  // 全域投票與情報查證 Hook (支援 Leaflet Popup 1-click 直接審核真偽)
+  useEffect(() => {
+    window.__voteIntel = (intelId, choice) => {
+      const res = voteIntelTruth(intelId, choice);
+      alert(res.message);
+    };
+    return () => {
+      delete window.__voteIntel;
+    };
+  }, []);
 
   // 1. 初始化 Leaflet 地圖
   useEffect(() => {
@@ -886,25 +900,51 @@ export default function SafeMap({
       });
     }
 
-    // D. 旗標
+    // D. 旗標 (支援手動拖曳重新定位，並於定位前彈出二次確認)
     layersRef.current.dangerFlagsGroup.clearLayers();
     if (showDangerFlags) {
       decryptedFlags.forEach(flag => {
         const isUnlocked = flag.isUnlocked;
         const icon = L.divIcon({
-          className: 'flag-icon',
+          className: 'flag-icon cursor-grab active:cursor-grabbing',
           html: isUnlocked
-            ? `<div class="bg-rose-600 text-white font-black px-2 py-1 rounded-xl shadow-lg border-2 border-amber-300 text-xs">🚩 ${flag.title}</div>`
+            ? `<div class="bg-rose-600 text-white font-black px-2 py-1 rounded-xl shadow-lg border-2 border-amber-300 text-xs flex items-center gap-1">🚩 ${flag.title} <span class="text-[9px] text-amber-200 opacity-90">(可拖曳)</span></div>`
             : `<div class="bg-slate-700 text-amber-400 font-bold px-2 py-1 rounded-xl shadow-lg border-2 border-slate-500 text-xs">🔒 暗碼旗標</div>`,
-          iconSize: [130, 32],
-          iconAnchor: [65, 16]
+          iconSize: [140, 32],
+          iconAnchor: [70, 16]
         });
-        const marker = L.marker([flag.lat, flag.lng], { icon }).bindPopup(
+
+        const marker = L.marker([flag.lat, flag.lng], {
+          icon,
+          draggable: Boolean(isUnlocked)
+        }).bindPopup(
           isUnlocked
-            ? `<div style="padding:4px;"><h4 style="font-weight:bold; color:#dc2626;">🚩 ${flag.title}</h4><p>${flag.description || ''}</p></div>`
+            ? `<div style="padding:4px;"><h4 style="font-weight:bold; color:#dc2626; margin:0 0 4px 0;">🚩 ${flag.title}</h4><p style="margin:2px 0;">${flag.description || '自訂危險點位'}</p><p style="font-size:10px; color:#38bdf8; margin-top:4px; font-weight:bold;">💡 提示：按住旗標可手動拖曳重新定位</p></div>`
             : `<div style="padding:4px;"><h4 style="color:#d97706;">🔒 暗碼保護情報</h4></div>`,
           { autoPan: false, keepInView: true }
         );
+
+        if (isUnlocked) {
+          marker.on('dragend', (e) => {
+            const newPos = e.target.getLatLng();
+            const newLat = Number(newPos.lat.toFixed(4));
+            const newLng = Number(newPos.lng.toFixed(4));
+
+            const isConfirmed = window.confirm(
+              `📍【確認重新定位地區災害旗標】\n\n您確定要將【${flag.title}】移動至新座標：\n緯度：${newLat}\n經度：${newLng} 嗎？`
+            );
+
+            if (isConfirmed) {
+              updateDangerFlagLocation(flag.id, newLat, newLng);
+              loadAndDecryptData();
+              alert(`✅ 已成功將【${flag.title}】更新至新座標 (${newLat}, ${newLng})！`);
+            } else {
+              // 恢復原座標
+              marker.setLatLng([flag.lat, flag.lng]);
+            }
+          });
+        }
+
         layersRef.current.dangerFlagsGroup.addLayer(marker);
       });
     }
@@ -1067,6 +1107,7 @@ export default function SafeMap({
           showInvasion={showInvasion} setShowInvasion={setShowInvasion}
           showMissile={showMissile} setShowMissile={setShowMissile}
           showCoastal={showCoastal} setShowCoastal={setShowCoastal}
+          onOpenIntelCrawler={() => setIsIntelCrawlerOpen(true)}
         />
       </div>
 
@@ -1204,6 +1245,11 @@ export default function SafeMap({
       <DailyIntelModal
         isOpen={isDailyIntelOpen}
         onClose={() => setIsDailyIntelOpen(false)}
+      />
+
+      <IntelCrawlerModal
+        isOpen={isIntelCrawlerOpen}
+        onClose={() => setIsIntelCrawlerOpen(false)}
       />
     </div>
   );

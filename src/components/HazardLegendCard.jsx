@@ -14,7 +14,8 @@ export default function HazardLegendCard({
   showRadius, setShowRadius,
   showInvasion, setShowInvasion,
   showMissile, setShowMissile,
-  showCoastal, setShowCoastal
+  showCoastal, setShowCoastal,
+  onOpenIntelCrawler
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -235,6 +236,25 @@ export default function HazardLegendCard({
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>🟢 5km 範圍圈</span>
             </button>
+          )}
+
+          {/* 🛰️ 爬蟲引擎與情報真偽查證快捷入口 */}
+          {onOpenIntelCrawler && (
+            <div className="col-span-2 sm:col-span-4 mt-1 pt-1.5 border-t border-slate-800 flex items-center justify-between gap-2 bg-slate-950/60 p-1.5 rounded-xl">
+              <div className="flex items-center gap-1.5 text-[11px] text-cyan-300 font-bold truncate">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping shrink-0" />
+                <span className="truncate">爬蟲每10分更新 | 3分鐘內可改投票</span>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenIntelCrawler();
+                }}
+                className="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs rounded-lg flex items-center gap-1 shadow shrink-0 active:scale-95"
+              >
+                <span>🛰️ 爬蟲情資與真假投票</span>
+              </button>
+            </div>
           )}
         </div>
       )}

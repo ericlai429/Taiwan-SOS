@@ -77,6 +77,23 @@ export function saveDangerFlag(flagEncryptedObj) {
   return flags;
 }
 
+export function updateDangerFlagLocation(flagId, newLat, newLng) {
+  try {
+    const flags = getStoredDangerFlags();
+    const updated = flags.map(f => {
+      if (f.id === flagId) {
+        return { ...f, lat: newLat, lng: newLng };
+      }
+      return f;
+    });
+    localStorage.setItem(KEYS.DANGER_FLAGS, JSON.stringify(updated));
+    return updated;
+  } catch (e) {
+    console.error('Update danger flag location failed', e);
+    return getStoredDangerFlags();
+  }
+}
+
 // 自訂彩色災害範圍圈儲存 (Encrypted Hazard Zones)
 export function getStoredCustomHazardZones() {
   try {
