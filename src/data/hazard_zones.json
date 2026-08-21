@@ -1,0 +1,17 @@
+[
+  {
+    "id": "hazard-tp-01",
+    "type": "utility_outage",
+    "typeName": "💧 停水停電區 (卡其色無水區)",
+    "title": "中正區變電站與水管幹拆 - 局部停水停電區",
+    "city": "台北市",
+    "district": "中正區",
+    "lat": 25.043,
+    "lng": 121.514,
+    "radiusMeters": 600,
+    "color": "#c2b280",
+    "fillColor": "#c2b280",
+    "fillOpacity": 0.35,
+    "description": "無水可用（卡其色警戒），自來水幹線破裂與供電中斷。請使用戰備水罐與預備儲水。"
+  }
+]

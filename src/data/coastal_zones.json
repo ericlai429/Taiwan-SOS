@@ -1,0 +1,54 @@
+[
+  {
+    "id": "coastal-01",
+    "title": "🌊 沿海與河口防衛警戒 - 淡水河口樞紐段",
+    "city": "新北市",
+    "district": "淡水區",
+    "lat": 25.1760,
+    "lng": 121.4320,
+    "radiusMeters": 2500,
+    "color": "#ea580c",
+    "fillColor": "#c2410c",
+    "fillOpacity": 0.35,
+    "warningMsg": "戰略水道與灘岸防務重點，民眾請勿前往沿海露天或河岸區，請迅速向內陸高地或地下避難所移動！"
+  },
+  {
+    "id": "coastal-km",
+    "title": "🌊 離島沿海與灘岸防護警戒 - 金門古寧頭/料羅灣段",
+    "city": "金門縣",
+    "district": "金城鎮/金湖鎮",
+    "lat": 24.4750,
+    "lng": 118.3120,
+    "radiusMeters": 3500,
+    "color": "#ea580c",
+    "fillColor": "#c2410c",
+    "fillOpacity": 0.4,
+    "warningMsg": "前線沿海灘岸封鎖警戒，嚴禁民眾進入露天海岸沙灘，請速進入金城花崗岩地下坑道避難！"
+  },
+  {
+    "id": "coastal-lj",
+    "title": "🌊 離島沿海防衛警戒 - 馬祖東引與莒光海域",
+    "city": "連江縣 (馬祖)",
+    "district": "南竿鄉/東引鄉",
+    "lat": 26.1620,
+    "lng": 119.9580,
+    "radiusMeters": 3000,
+    "color": "#ea580c",
+    "fillColor": "#c2410c",
+    "fillOpacity": 0.4,
+    "warningMsg": "馬祖全島海岸管制警戒，請依防衛指揮部引導進入山隴地下坑道。"
+  },
+  {
+    "id": "coastal-ph",
+    "title": "🌊 離島沿海與港口防禦警戒 - 澎湖馬公港海域",
+    "city": "澎湖縣",
+    "district": "馬公市",
+    "lat": 23.5650,
+    "lng": 119.5700,
+    "radiusMeters": 3000,
+    "color": "#ea580c",
+    "fillColor": "#c2410c",
+    "fillOpacity": 0.35,
+    "warningMsg": "澎湖群島港口防衛警戒，請民眾遠離海岸港堤設施。"
+  }
+]

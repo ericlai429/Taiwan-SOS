@@ -1,0 +1,67 @@
+[
+  {
+    "id": "missile-01",
+    "title": "🚨 飛彈空襲高風險熱區 - 台北松山機場周邊",
+    "city": "台北市",
+    "district": "中山區/松山區",
+    "lat": 25.0697,
+    "lng": 121.5525,
+    "radiusMeters": 2000,
+    "color": "#ef4444",
+    "fillColor": "#b91c1c",
+    "fillOpacity": 0.35,
+    "warningMsg": "高價值交通與軍民樞紐，空襲警戒時請迅速前往民權西路或捷運地下避難所地下 B2/B3 層！"
+  },
+  {
+    "id": "missile-02",
+    "title": "🚨 飛彈空襲高風險熱區 - 大直衡山指揮樞紐周邊",
+    "city": "台北市",
+    "district": "中山區",
+    "lat": 25.0820,
+    "lng": 121.5490,
+    "radiusMeters": 2500,
+    "color": "#dc2626",
+    "fillColor": "#991b1b",
+    "fillOpacity": 0.4,
+    "warningMsg": "國防指揮設施高防禦區域，如聞警報切勿於露天停佇，速避入大直地下結構！"
+  },
+  {
+    "id": "missile-tc",
+    "title": "🚨 飛彈空襲高風險熱區 - 台中清泉崗空軍基地周邊",
+    "city": "台中市",
+    "district": "沙鹿區/大雅區",
+    "lat": 24.2640,
+    "lng": 120.6210,
+    "radiusMeters": 3000,
+    "color": "#ef4444",
+    "fillColor": "#b91c1c",
+    "fillOpacity": 0.35,
+    "warningMsg": "中部重要航空防禦基地，防空警報時請遠離露天高空區，向大雅地下避難處撤離。"
+  },
+  {
+    "id": "missile-kh",
+    "title": "🚨 飛彈空襲高風險熱區 - 高雄左營軍港與軍區周邊",
+    "city": "高雄市",
+    "district": "左營區",
+    "lat": 22.6950,
+    "lng": 120.2780,
+    "radiusMeters": 3500,
+    "color": "#ef4444",
+    "fillColor": "#b91c1c",
+    "fillOpacity": 0.35,
+    "warningMsg": "南部海軍主要基地，請遵守警報指引進入高捷地下車站避難。"
+  },
+  {
+    "id": "missile-hl",
+    "title": "🚨 飛彈空襲高風險熱區 - 花蓮佳山基地周邊",
+    "city": "花蓮縣",
+    "district": "新城鄉/花蓮市",
+    "lat": 24.0250,
+    "lng": 121.6180,
+    "radiusMeters": 3000,
+    "color": "#ef4444",
+    "fillColor": "#b91c1c",
+    "fillOpacity": 0.35,
+    "warningMsg": "東部空軍洞庫防衛基地，空襲警戒時請往內陸地下隧道避難。"
+  }
+]
