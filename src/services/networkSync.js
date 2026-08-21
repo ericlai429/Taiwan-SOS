@@ -1,6 +1,6 @@
 /**
  * 🌐 全功能強固型跨裝置 (手機 4G <-> 電腦/NB) 即時 MQTT WebSockets 同步引擎
- * 使用統一標準 MQTT over WebSockets 叢集 (EMQX 8084 專用極速通道)
+ * 使用標準 Port 443 SSL 加密 WebSockets 傳輸 (相容全台各大電信 4G/5G 行動網路，絕不受非標準埠號封鎖)
  * 100% 支援跨實體裝置、跨行動網路 (4G/5G/Wi-Fi) 零延遲即時彈幕廣播與暗碼對話對齊
  */
 
@@ -11,13 +11,22 @@ class RealtimeNetworkSync {
     this.client = null;
     this.localChannel = null;
     this.subscribers = new Set();
-    this.currentTopic = 'taiwan-sos/pubsub/public';
+    this.currentTopic = 'taiwan-sos/pubsub/CH-01';
     this.deviceId = this.getOrCreateDeviceId();
     this.isConnected = false;
-    this.brokerUrl = 'wss://broker.emqx.io:8084/mqtt'; // 📌 統一全台固定主要 MQTT 叢集，嚴禁隨機亂跑
+
+    // 定義優先 Broker (首選標準 Port 443，避免 4G/5G 防火牆檔 8084/8884 埠號)
+    this.BROKERS = [
+      'wss://broker.hivemq.com:443/mqtt',  // 📌 443 標準 SSL 埠號 (手機 4G/5G 全電信支援)
+      'wss://broker.emqx.io:8084/mqtt',    // EMQX 8084 備用
+      'wss://test.mosquitto.org:8081'      // Mosquitto 8081 備用
+    ];
+    this.brokerIndex = 0;
 
     // 初始化同裝置多分頁極速 Local Channel
     this.initLocalChannel();
+    // 綁定頁面可見度與網路狀態監聽 (手機解鎖/切換 App 自動重連)
+    this.bindNetworkEvents();
   }
 
   getOrCreateDeviceId() {
@@ -42,10 +51,26 @@ class RealtimeNetworkSync {
     }
   }
 
+  bindNetworkEvents() {
+    window.addEventListener('online', () => {
+      console.log('🌐 網路已恢復，自動連線 MQTT...');
+      this.connectMQTT();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        if (!this.client || !this.isConnected) {
+          console.log('📱 手機解鎖/開啟畫面，重連 MQTT...');
+          this.connectMQTT();
+        }
+      }
+    });
+  }
+
   // 設定並切換暗碼頻道 (MQTT Topic)
   setChannel(cipherCode) {
-    const rawCode = cipherCode ? cipherCode.trim() : 'public';
-    // 將暗碼作簡單 Safe Topic 轉換
+    const rawCode = cipherCode ? cipherCode.trim() : 'CH-01';
+    // 將暗碼作 Safe Topic 轉換
     const safeTopic = `taiwan-sos/pubsub/${encodeURIComponent(rawCode)}`;
 
     if (this.currentTopic !== safeTopic) {
@@ -61,27 +86,23 @@ class RealtimeNetworkSync {
     }
   }
 
-  // 連接高可用性公用 MQTT Over WebSockets 叢集 (EMQX Primary / HiveMQ Backup)
-  connectMQTT(useBackup = false) {
+  // 連接 MQTT Over WebSockets (自動輪詢 443 標準埠號節點)
+  connectMQTT() {
     if (this.client) {
       try { this.client.end(true); } catch (e) {}
       this.client = null;
     }
 
-    const primaryBroker = 'wss://broker.emqx.io:8084/mqtt';
-    const backupBroker = 'wss://broker.hivemq.com:8884/mqtt';
-    const targetUrl = useBackup ? backupBroker : primaryBroker;
-    this.brokerUrl = targetUrl;
-
+    const targetUrl = this.BROKERS[this.brokerIndex];
     const clientId = `TaiwanSOS_${this.deviceId}_${Math.random().toString(36).substring(2, 6)}`;
 
-    console.log(`🌐 正在建立全台統一跨裝置連線：${targetUrl} [Topic: ${this.currentTopic}]`);
+    console.log(`🌐 正在建立全台跨裝置 443 通道連線：${targetUrl} [Topic: ${this.currentTopic}]`);
 
     try {
       this.client = mqtt.connect(targetUrl, {
         clientId,
-        keepalive: 30,
-        reconnectPeriod: 2000,
+        keepalive: 20,
+        reconnectPeriod: 2500,
         connectTimeout: 8000,
         resubscribe: true,
         clean: true
@@ -89,7 +110,7 @@ class RealtimeNetworkSync {
 
       this.client.on('connect', () => {
         this.isConnected = true;
-        console.log('✅ MQTT 跨裝置網路連線成功！ (手機 <-> 電腦連通於同一個 Broker)');
+        console.log(`✅ MQTT 跨裝置 Port 443 網路連線成功！ (${targetUrl})`);
         
         // 訂閱當前頻道 Topic
         this.client.subscribe(this.currentTopic, { qos: 0 }, (err) => {
@@ -108,7 +129,7 @@ class RealtimeNetworkSync {
 
           // 濾掉自己發出的訊息 (避免重複)
           if (parsed && parsed.senderId !== this.deviceId) {
-            console.log('⚡ 收到遠端跨裝置訊息/廣播：', parsed.payload);
+            console.log('⚡ [MQTT 收到遠端訊息/廣播]：', parsed.payload);
             this.notifySubscribers(parsed.payload, 'remote_mqtt');
           }
         } catch (err) {
@@ -117,11 +138,10 @@ class RealtimeNetworkSync {
       });
 
       this.client.on('error', (err) => {
-        console.warn('MQTT Client Error:', err);
-        if (!useBackup) {
-          console.log('🔄 主要 EMQX 節點連線受阻，嘗試切換備用 HiveMQ 節點...');
-          setTimeout(() => this.connectMQTT(true), 2000);
-        }
+        console.warn(`MQTT Client Error (${targetUrl}):`, err);
+        this.isConnected = false;
+        // 自動切換下一個 Broker 節點
+        this.brokerIndex = (this.brokerIndex + 1) % this.BROKERS.length;
       });
 
       this.client.on('close', () => {
@@ -129,10 +149,11 @@ class RealtimeNetworkSync {
       });
     } catch (err) {
       console.error('MQTT Connection fail', err);
+      this.brokerIndex = (this.brokerIndex + 1) % this.BROKERS.length;
     }
   }
 
-  // 廣播發送訊息 (兼顧本機多分頁與 4G/Wi-Fi 跨裝置實體網路)
+  // 廣播發送訊息 (兼顧本機多分頁與 4G/5G/Wi-Fi 跨裝置實體網路)
   broadcast(type, data) {
     const payloadObj = { type, data, timestamp: Date.now() };
 
@@ -156,7 +177,8 @@ class RealtimeNetworkSync {
         console.warn('MQTT Publish error', err);
       }
     } else {
-      console.warn('⚠️ MQTT 未連線，訊息無法發送至遠端實體裝置');
+      console.warn('⚠️ MQTT 尚未連線成功，重新嘗試發送連線...');
+      this.connectMQTT();
     }
   }
 
