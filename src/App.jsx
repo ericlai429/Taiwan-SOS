@@ -7,8 +7,8 @@ import HeartbeatSOS from './components/HeartbeatSOS';
 import SOSFlashlightModal from './components/SOSFlashlightModal';
 import SirenAudioModal from './components/SirenAudioModal';
 import SurvivalChecklistModal from './components/SurvivalChecklistModal';
-import { getStoredCipherCode } from './services/storage';
-import { Shield, Phone, Lock, Calendar, Zap, Radio, ShoppingBag } from 'lucide-react';
+import { getStoredCipherCode, clearAllCacheAndStorage } from './services/storage';
+import { Shield, Phone, Lock, Calendar, Zap, Radio, ShoppingBag, RotateCcw } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('map');
@@ -36,6 +36,13 @@ export default function App() {
     day: 'numeric',
     weekday: 'long'
   });
+
+  const handleResetData = async () => {
+    if (window.confirm('確定要清空所有網頁暫存與舊資料嗎？此操作將清除離線快取並重新載入最新網頁。')) {
+      await clearAllCacheAndStorage();
+      window.location.reload(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none pb-20">
@@ -65,6 +72,15 @@ export default function App() {
 
           {/* 頂部快捷應變工具與直撥電話 */}
           <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleResetData}
+              className="p-2 bg-slate-800 hover:bg-rose-950 text-slate-300 hover:text-rose-300 rounded-xl border border-slate-700 hover:border-rose-600 text-xs font-bold flex items-center gap-1 active:scale-95 transition-all"
+              title="清除所有網頁暫存與舊資料"
+            >
+              <RotateCcw className="w-4 h-4 text-slate-400" />
+              <span className="hidden md:inline">重置暫存</span>
+            </button>
+
             <button
               onClick={() => setIsFlashlightOpen(true)}
               className="p-2 bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-xl border border-amber-600 text-xs font-bold flex items-center gap-1 active:scale-95"

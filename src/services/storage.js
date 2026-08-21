@@ -1,5 +1,5 @@
 /**
- * LocalStorage / 離線資料持久化管理
+ * LocalStorage / 離線資料持久化與快取重置管理
  */
 
 const KEYS = {
@@ -42,7 +42,7 @@ function getInitialMessages() {
     {
       id: "msg-1",
       sender: "指揮組 / 系統廣播",
-      text: "歡迎使用雙北桃園安全避難網。請親友對齊『暗碼』後進行安全加密對話與災害圈共享。",
+      text: "歡迎使用台灣急難通 (Taiwan SOS)。請親友對齊『暗碼』後進行安全加密對話與災害圈共享。",
       isEncrypted: false,
       timestamp: new Date(Date.now() - 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
@@ -102,5 +102,29 @@ export function saveDailyIntel(dateStr, content) {
     localStorage.setItem(KEYS.DAILY_INTEL, JSON.stringify(data));
   } catch (e) {
     console.error('Save daily intel failed', e);
+  }
+}
+
+/**
+ * 🔄 完全清空本地暫存、快取與舊資料 (避免舊資料干擾)
+ */
+export async function clearAllCacheAndStorage() {
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (let reg of regs) {
+        await reg.unregister();
+      }
+    }
+  } catch (e) {
+    console.error('Clear cache failed:', e);
   }
 }
