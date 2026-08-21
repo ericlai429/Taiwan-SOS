@@ -56,6 +56,24 @@
   stroke-dasharray: 6 6;
 }
 
+/* 📢 彈幕廣播從右往左移動 keyframes */
+@keyframes danmaku-fly {
+  0% {
+    left: 100%;
+    transform: translateX(0);
+  }
+  100% {
+    left: 0%;
+    transform: translateX(-100%);
+  }
+}
+
+.animate-danmaku-fly {
+  animation-name: danmaku-fly;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
 @keyframes bounce-short {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }

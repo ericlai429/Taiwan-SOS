@@ -26,6 +26,8 @@ import SirenAudioModal from './SirenAudioModal';
 import SurvivalChecklistModal from './SurvivalChecklistModal';
 import InvasionPlaybackBar from './InvasionPlaybackBar';
 import CountySelector from './CountySelector';
+import DanmakuOverlay from './DanmakuOverlay';
+import DanmakuInputBar from './DanmakuInputBar';
 import invasionHistoryData from '../data/invasion_history.json';
 
 export default function SafeMap({ cipherCode, onSelectDestination }) {
@@ -69,6 +71,23 @@ export default function SafeMap({ cipherCode, onSelectDestination }) {
 
   // 入侵時間軸步數狀態 (30分鐘為單位)
   const [currentInvasionStep, setCurrentInvasionStep] = useState(0);
+
+  // 📢 彈幕廣播列表狀態
+  const [danmakuList, setDanmakuList] = useState([
+    { id: 'dm-1', text: '捷運台北車站地下 B3 層正常開放防空避難', sender: '防空民防組', topPercent: 18, speedSeconds: 15 },
+    { id: 'dm-2', text: '停水區域請前往各里活動中心領取備用自來水包', sender: '水務後勤組', topPercent: 28, speedSeconds: 17 }
+  ]);
+
+  const handleSendDanmaku = (text) => {
+    const newDanmaku = {
+      id: `dm-${Date.now()}`,
+      text,
+      sender: cipherCode ? '暗碼親友' : '緊急通報',
+      topPercent: Math.floor(Math.random() * 35) + 15, // 15% ~ 50% 隨機高度
+      speedSeconds: 14
+    };
+    setDanmakuList(prev => [...prev, newDanmaku]);
+  };
 
   // 圖層開關狀態
   const [showShelters, setShowShelters] = useState(true);
@@ -566,6 +585,9 @@ export default function SafeMap({ cipherCode, onSelectDestination }) {
 
       <div ref={mapRef} className="w-full h-full z-10" />
 
+      {/* 📢 彈幕廣播動態文字圖層 (從右往左移動) */}
+      <DanmakuOverlay danmakuList={danmakuList} />
+
       {/* 頂部全台 22 縣市定位與災害圖例列 */}
       <div className={`absolute top-3 z-[990] max-w-lg space-y-1.5 transition-all ${
         isLandscape && isMobile ? 'left-16 right-3' : 'left-3 right-3 sm:right-auto'
@@ -586,10 +608,17 @@ export default function SafeMap({ cipherCode, onSelectDestination }) {
         />
       </div>
 
+      {/* 📢 底部即時彈幕廣播發話列 (含 30 秒冷卻倒數) */}
+      <div className={`absolute bottom-3 z-[990] transition-all ${
+        isLandscape && isMobile ? 'left-40 right-28' : 'left-3 right-16 sm:left-36 max-w-md'
+      }`}>
+        <DanmakuInputBar onSendDanmaku={handleSendDanmaku} />
+      </div>
+
       {/* 底部敵佔領與快艇推進 30 分鐘時間軸拖拉回放控制器 (InvasionPlaybackBar) */}
       {showInvasion && (
-        <div className={`absolute bottom-3 z-[990] transition-all ${
-          isLandscape && isMobile ? 'left-40 right-28' : 'left-3 right-3 sm:left-36 max-w-sm sm:max-w-lg'
+        <div className={`absolute bottom-14 z-[990] transition-all ${
+          isLandscape && isMobile ? 'left-40 right-28' : 'left-3 right-16 sm:left-36 max-w-md'
         }`}>
           <InvasionPlaybackBar
             currentStepIndex={currentInvasionStep}
