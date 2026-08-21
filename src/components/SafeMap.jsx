@@ -31,7 +31,7 @@ import DanmakuInputBar from './DanmakuInputBar';
 import Tooltip from './Tooltip';
 import invasionHistoryData from '../data/invasion_history.json';
 
-export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) {
+export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
@@ -605,7 +605,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) 
           selectedCountyId={selectedCountyId}
           onSelectCounty={handleSelectCounty}
           onSelectRegion={handleSelectRegion}
-          isMicro25={isMicro25}
+          btnLevel={btnLevel}
         />
 
         <HazardLegendCard
@@ -638,7 +638,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) 
         </div>
       )}
 
-      {/* 側邊按鈕控制列 (支援 25px 極小模式與浮窗提示) */}
+      {/* 側邊按鈕控制列 (支援 5 級距按鈕尺寸: 25px, 33px, 42px, 50px, 60px) */}
       <div className={`absolute bottom-16 z-[990] flex flex-col gap-1.5 transition-all ${
         isLandscape && isMobile ? 'left-16' : 'right-3'
       }`}>
@@ -646,13 +646,15 @@ export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) 
           <button
             onClick={recenterMap}
             className={`bg-slate-900/95 border border-emerald-500 hover:bg-slate-800 text-emerald-400 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
-              isMicro25
-                ? 'w-[25px] h-[25px] p-0 rounded-lg'
-                : 'p-2 rounded-2xl gap-1.5'
+              btnLevel === 1 ? 'w-[25px] h-[25px] p-0 rounded-lg text-[10px]' :
+              btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
+              btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl gap-1.5' :
+              btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl gap-1.5' :
+              'h-[50px] px-3.5 py-2 text-senior-sm rounded-2xl font-black gap-2'
             }`}
           >
-            <Navigation className={`animate-pulse text-emerald-400 shrink-0 ${isMicro25 ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
-            {!isMicro25 && <span className="text-xs text-white hidden sm:inline">我的位置</span>}
+            <Navigation className={`animate-pulse text-emerald-400 shrink-0 ${btnLevel <= 2 ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+            {btnLevel >= 3 && <span className="text-xs text-white hidden sm:inline">我的位置</span>}
           </button>
         </Tooltip>
 
@@ -661,13 +663,15 @@ export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) 
           <button
             onClick={() => setIsAddHazardOpen(true)}
             className={`bg-amber-950/95 border border-amber-500 hover:bg-amber-900 text-amber-300 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
-              isMicro25
-                ? 'w-[25px] h-[25px] p-0 rounded-lg'
-                : 'p-2 rounded-2xl gap-1.5'
+              btnLevel === 1 ? 'w-[25px] h-[25px] p-0 rounded-lg text-[10px]' :
+              btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
+              btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl gap-1.5' :
+              btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl gap-1.5' :
+              'h-[50px] px-3.5 py-2 text-senior-sm rounded-2xl font-black gap-2'
             }`}
           >
-            <CircleDot className={`text-amber-400 animate-spin-slow shrink-0 ${isMicro25 ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
-            {!isMicro25 && <span className="text-xs text-white hidden sm:inline">新增彩色圈</span>}
+            <CircleDot className={`text-amber-400 animate-spin-slow shrink-0 ${btnLevel <= 2 ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+            {btnLevel >= 3 && <span className="text-xs text-white hidden sm:inline">新增彩色圈</span>}
           </button>
         </Tooltip>
 
@@ -676,13 +680,15 @@ export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) 
           <button
             onClick={() => setIsAddFlagOpen(true)}
             className={`bg-rose-950/95 border border-rose-500 hover:bg-rose-900 text-rose-300 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
-              isMicro25
-                ? 'w-[25px] h-[25px] p-0 rounded-lg'
-                : 'p-2 rounded-2xl gap-1.5'
+              btnLevel === 1 ? 'w-[25px] h-[25px] p-0 rounded-lg text-[10px]' :
+              btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
+              btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl gap-1.5' :
+              btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl gap-1.5' :
+              'h-[50px] px-3.5 py-2 text-senior-sm rounded-2xl font-black gap-2'
             }`}
           >
-            <Flag className={`text-rose-400 fill-rose-500 shrink-0 ${isMicro25 ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
-            {!isMicro25 && <span className="text-xs text-white hidden sm:inline">標記危險區</span>}
+            <Flag className={`text-rose-400 fill-rose-500 shrink-0 ${btnLevel <= 2 ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+            {btnLevel >= 3 && <span className="text-xs text-white hidden sm:inline">標記危險區</span>}
           </button>
         </Tooltip>
 
@@ -691,13 +697,15 @@ export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) 
           <button
             onClick={() => setIsDailyIntelOpen(true)}
             className={`bg-slate-900/95 border border-slate-600 hover:bg-slate-800 text-slate-300 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
-              isMicro25
-                ? 'w-[25px] h-[25px] p-0 rounded-lg'
-                : 'p-2 rounded-2xl gap-1.5'
+              btnLevel === 1 ? 'w-[25px] h-[25px] p-0 rounded-lg text-[10px]' :
+              btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
+              btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl gap-1.5' :
+              btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl gap-1.5' :
+              'h-[50px] px-3.5 py-2 text-senior-sm rounded-2xl font-black gap-2'
             }`}
           >
-            <Calendar className={`text-slate-300 shrink-0 ${isMicro25 ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
-            {!isMicro25 && <span className="text-xs text-white hidden sm:inline">每日情報</span>}
+            <Calendar className={`text-slate-300 shrink-0 ${btnLevel <= 2 ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+            {btnLevel >= 3 && <span className="text-xs text-white hidden sm:inline">每日情報</span>}
           </button>
         </Tooltip>
       </div>

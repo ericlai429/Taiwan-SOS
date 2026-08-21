@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { MapPin, Globe, Compass } from 'lucide-react';
+import { MapPin, Globe } from 'lucide-react';
 import countiesData from '../data/counties.json';
+import Tooltip from './Tooltip';
 
 // 5 大輪播區域與視角座標/縮放率
 const REGION_CYCLES = [
@@ -11,7 +12,7 @@ const REGION_CYCLES = [
   { id: 'east', name: '🌊 東區', label: '東部地區 (花蓮/台東)', lat: 23.5, lng: 121.3, zoom: 9.5 }
 ];
 
-export default function CountySelector({ selectedCountyId, onSelectCounty, onSelectRegion, isMicro25 }) {
+export default function CountySelector({ selectedCountyId, onSelectCounty, onSelectRegion, btnLevel = 3 }) {
   const [regionIndex, setRegionIndex] = useState(0);
 
   // 輪流切換區域 (全區 -> 北區 -> 中區 -> 南區 -> 東區 -> 循環)
@@ -25,22 +26,26 @@ export default function CountySelector({ selectedCountyId, onSelectCounty, onSel
   };
 
   const currentRegion = REGION_CYCLES[regionIndex];
+  const isMicro = btnLevel <= 2;
 
   return (
     <div className="flex items-center gap-1.5 bg-slate-900/95 border border-slate-700 rounded-xl p-1.5 backdrop-blur-md shadow-lg">
-      {/* 🔄 地區單鍵輪播按鈕 (按下去可輪著切換) */}
-      <button
-        onClick={handleCycleRegion}
-        className={`bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 border border-purple-400 text-white font-black shadow-md flex items-center justify-center active:scale-95 transition-all shrink-0 ${
-          isMicro25
-            ? 'w-[25px] h-[25px] p-0 rounded-lg text-[10px]'
-            : 'px-2.5 py-1 rounded-lg text-xs gap-1'
-        }`}
-        title={`當前：${currentRegion.label}。點擊切換下一個區域`}
-      >
-        <Globe className={isMicro25 ? 'w-3.5 h-3.5 text-amber-300' : 'w-4 h-4 text-amber-300 animate-spin-slow'} />
-        {!isMicro25 && <span>{currentRegion.name}</span>}
-      </button>
+      {/* 🔄 地區單鍵輪播按鈕 (支援 5 級距與 Tooltip 浮窗提示) */}
+      <Tooltip text={`地區輪播：當前【${currentRegion.label}】(點擊輪播)`} position="right">
+        <button
+          onClick={handleCycleRegion}
+          className={`bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 border border-purple-400 text-white font-black shadow-md flex items-center justify-center active:scale-95 transition-all shrink-0 ${
+            btnLevel === 1 ? 'w-[25px] h-[25px] p-0 text-[10px] rounded-lg' :
+            btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
+            btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl gap-1' :
+            btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl gap-1' :
+            'h-[50px] px-3 py-2 text-senior-sm rounded-2xl font-black gap-1'
+          }`}
+        >
+          <Globe className="w-3.5 h-3.5 text-amber-300 animate-spin-slow shrink-0" />
+          {!isMicro && <span className="whitespace-nowrap">{currentRegion.name}</span>}
+        </button>
+      </Tooltip>
 
       {/* 22 縣市細分下拉選單 */}
       <div className="flex items-center gap-1 flex-1 min-w-0">
