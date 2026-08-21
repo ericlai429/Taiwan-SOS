@@ -70,6 +70,14 @@ export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) 
     }
   };
 
+  // 🌏 切換 5 大區域視野 (全區 ➔ 北區 ➔ 中區 ➔ 南區 ➔ 東區 輪播)
+  const handleSelectRegion = (region) => {
+    const map = mapInstanceRef.current;
+    if (map) {
+      map.flyTo([region.lat, region.lng], region.zoom, { animate: true });
+    }
+  };
+
   // 入侵時間軸步數狀態 (30分鐘為單位)
   const [currentInvasionStep, setCurrentInvasionStep] = useState(0);
 
@@ -596,6 +604,8 @@ export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) 
         <CountySelector
           selectedCountyId={selectedCountyId}
           onSelectCounty={handleSelectCounty}
+          onSelectRegion={handleSelectRegion}
+          isMicro25={isMicro25}
         />
 
         <HazardLegendCard
