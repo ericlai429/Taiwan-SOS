@@ -645,15 +645,15 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     }
   }, [showUtility, showBlockade, showCasualty, showMissile, showCoastal, showInvasion, currentInvasionStep, decryptedCustomHazards]);
 
-  // 📌 1. 動態計算 5 級距點位標籤 (地點名稱文字為深灰色 text-slate-900，與 5 級縮放按鈕連動)
+  // 📌 1. 動態計算 5 級距點位標籤 (地點名稱文字為質感淺灰色 text-slate-200，尺寸再縮小 20%)
   const createSmartMarkerIcon = (iconSymbol, name, category, level) => {
     const borderColor =
-      category === 'shelter' ? 'border-emerald-600' :
-      category === 'medical' ? 'border-rose-600' :
-      category === 'supplies' ? 'border-amber-600' :
-      category === 'police' ? 'border-blue-600' :
-      category === 'fire' ? 'border-orange-600' :
-      category === 'community' ? 'border-purple-600' : 'border-teal-600';
+      category === 'shelter' ? 'border-emerald-500' :
+      category === 'medical' ? 'border-rose-500' :
+      category === 'supplies' ? 'border-amber-500' :
+      category === 'police' ? 'border-blue-500' :
+      category === 'fire' ? 'border-orange-500' :
+      category === 'community' ? 'border-purple-500' : 'border-teal-500';
 
     const dotBg =
       category === 'shelter' ? 'bg-emerald-600' :
@@ -664,38 +664,38 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
       category === 'community' ? 'bg-purple-600' : 'bg-teal-600';
 
     if (level === 1) {
-      // 微型 25px: 極簡圓形圖示 (0% 遮擋)
+      // 微型 25px: 極簡圓形圖示 (0% 遮擋，縮小 20%)
       return L.divIcon({
         className: 'smart-dot-icon',
-        html: `<div class="${dotBg} text-white font-black w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-xs shadow-xl transition-all active:scale-125 hover:scale-110">${iconSymbol}</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+        html: `<div class="${dotBg} text-white font-black w-6 h-6 rounded-full border border-white flex items-center justify-center text-[10px] shadow-xl transition-all active:scale-125 hover:scale-110">${iconSymbol}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
       });
     } else if (level === 2) {
-      // 精簡 33px: 微型高對比白底膠囊 + 深灰色地點文字說明
+      // 精簡 33px: 深色玻璃膠囊 + 淺灰色地點文字說明 (縮小 20%)
       const shortName = name.length > 5 ? name.substring(0, 4) + '..' : name;
       return L.divIcon({
         className: 'smart-mini-icon',
-        html: `<div class="bg-slate-100 text-slate-900 font-extrabold px-1.5 py-0.5 rounded-full border-2 ${borderColor} text-[11px] shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
-        iconSize: [75, 24],
-        iconAnchor: [37, 12]
+        html: `<div class="bg-slate-900/95 text-slate-200 font-bold px-1.5 py-0.5 rounded-full border ${borderColor} text-[9px] shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
+        iconSize: [60, 20],
+        iconAnchor: [30, 10]
       });
     } else if (level === 3) {
-      // 標準 42px: 高對比白底膠囊 + 深灰色地點文字說明
+      // 標準 42px: 深色玻璃膠囊 + 淺灰色地點文字說明 (縮小 20%)
       const shortName = name.length > 8 ? name.substring(0, 7) + '..' : name;
       return L.divIcon({
         className: 'smart-std-icon',
-        html: `<div class="bg-slate-100 text-slate-900 font-extrabold px-2 py-1 rounded-xl border-2 ${borderColor} text-xs shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
-        iconSize: [110, 28],
-        iconAnchor: [55, 14]
+        html: `<div class="bg-slate-900/95 text-slate-200 font-bold px-2 py-0.5 rounded-lg border-2 ${borderColor} text-[10px] shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
+        iconSize: [90, 24],
+        iconAnchor: [45, 12]
       });
     } else {
-      // 長輩 / 特大 50px~60px: 高對比白底膠囊 + 完整深灰色地點文字說明
+      // 長輩 / 特大 50px~60px: 深色玻璃膠囊 + 完整淺灰色地點文字說明 (縮小 20%)
       return L.divIcon({
         className: 'smart-full-icon',
-        html: `<div class="bg-slate-100 text-slate-900 font-black px-2.5 py-1.5 rounded-xl border-2 ${borderColor} text-senior-sm shadow-xl flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${name}</div>`,
-        iconSize: [145, 34],
-        iconAnchor: [72, 17]
+        html: `<div class="bg-slate-900/95 text-slate-200 font-extrabold px-2.5 py-1 rounded-xl border-2 ${borderColor} text-xs shadow-xl flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${name}</div>`,
+        iconSize: [120, 28],
+        iconAnchor: [60, 14]
       });
     }
   };
