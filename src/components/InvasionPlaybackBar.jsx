@@ -100,7 +100,7 @@ export default function InvasionPlaybackBar({ currentStepIndex, setCurrentStepIn
             />
 
             {/* 時間軸刻度標記 */}
-            <div className="flex justify-between text-[10px] text-slate-400 font-mono px-1">
+            <div className="flex justify-between text-[8.5px] sm:text-[10px] text-slate-400 font-mono px-0.5 overflow-hidden">
               {invasionHistoryData.map((step, idx) => (
                 <span
                   key={step.timeKey}
@@ -109,8 +109,8 @@ export default function InvasionPlaybackBar({ currentStepIndex, setCurrentStepIn
                     setIsPlaying(false);
                     setCurrentStepIndex(idx);
                   }}
-                  className={`cursor-pointer hover:text-white transition-all ${
-                    idx === currentStepIndex ? 'text-amber-300 font-bold underline scale-110' : ''
+                  className={`cursor-pointer hover:text-white transition-all shrink-0 ${
+                    idx === currentStepIndex ? 'text-amber-300 font-bold underline scale-105' : ''
                   }`}
                 >
                   {step.timeKey}

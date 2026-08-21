@@ -1111,11 +1111,11 @@ export default function SafeMap({
         />
       </div>
 
-      {/* 🛡️ 智能網格分區 2：廣播發話列 (浮於底部 SeniorNavbar 上方，100% 零遮擋) */}
+      {/* 🛡️ 智能網格分區 2：廣播發話列與時間軸 (右側保留 right-14 避讓右側側邊功能鈕，100% 零遮擋) */}
       <div className={`absolute z-[990] transition-all pointer-events-auto flex flex-col gap-1.5 ${
         isLandscape && isMobile
-          ? 'left-16 right-[2vw] bottom-2 max-w-lg'
-          : 'left-[2vw] right-[2vw] bottom-[calc(68px+env(safe-area-inset-bottom,0px))] sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:right-auto sm:px-3'
+          ? 'left-16 right-14 bottom-2 max-w-lg'
+          : 'left-[2vw] right-14 bottom-[calc(68px+env(safe-area-inset-bottom,0px))] sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:right-auto sm:px-3'
       }`}>
         {showInvasion && (
           <InvasionPlaybackBar
@@ -1126,13 +1126,11 @@ export default function SafeMap({
         <DanmakuInputBar onSendDanmaku={handleSendDanmaku} />
       </div>
 
-      {/* 🛡️ 智能網格分區 3：右側側邊功能欄 (浮於廣播欄上方，垂直隔離 100% 零遮擋) */}
+      {/* 🛡️ 智能網格分區 3：右側側邊功能欄 (獨立動態定位於右側邊欄，水平與時間軸/發話欄完全隔離) */}
       <div className={`absolute z-[995] flex flex-col gap-1.5 transition-all ${
         isLandscape && isMobile
           ? 'left-16 bottom-3'
-          : showInvasion
-          ? 'bottom-[calc(185px+env(safe-area-inset-bottom,0px))] right-[2vw] sm:bottom-3 sm:right-3'
-          : 'bottom-[calc(135px+env(safe-area-inset-bottom,0px))] right-[2vw] sm:bottom-3 sm:right-3'
+          : 'bottom-[calc(68px+env(safe-area-inset-bottom,0px))] right-[2vw] sm:bottom-3 sm:right-3'
       }`}>
         {/* 1. 我的位置 */}
         <Tooltip text="我的位置：重新定位至 GPS 動態座標" position="left">
