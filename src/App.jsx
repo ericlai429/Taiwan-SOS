@@ -23,6 +23,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('map');
   const [cipherCode, setCipherCode] = useState('');
   const [selectedTarget, setSelectedTarget] = useState(null);
+  const [userLocation, setUserLocation] = useState({ lat: 25.0645, lng: 121.6570 });
 
   // 5 個按鈕尺寸級距 (1: 25px, 2: 33px, 3: 42px, 4: 50px, 5: 60px)
   const [btnLevel, setBtnLevel] = useState(() => {
@@ -38,6 +39,20 @@ export default function App() {
   useEffect(() => {
     const saved = getStoredCipherCode();
     if (saved) setCipherCode(saved);
+
+    // 全域自動獲取一次真實 GPS 座標
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          });
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+    }
   }, []);
 
   // 循環切換 5 個按鈕級距 (25px -> 33px -> 42px -> 50px -> 60px -> 輪播)
@@ -155,11 +170,14 @@ export default function App() {
             cipherCode={cipherCode}
             onSelectDestination={handleSelectDestination}
             btnLevel={btnLevel}
+            userLocation={userLocation}
+            setUserLocation={setUserLocation}
           />
         )}
 
         {activeTab === 'resources' && (
           <ResourceList
+            userLocation={userLocation}
             onSelectDestination={handleSelectDestination}
             btnLevel={btnLevel}
           />

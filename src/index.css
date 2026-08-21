@@ -66,41 +66,36 @@
   background-color: #1e293b !important;
 }
 
-/* 😈 敵入侵/佔領區 - 暗紫色中毒泡泡脈衝動畫 (Poisonous Bubbling Keyframes) */
+/* 😈 敵入侵/佔領區 - 輕量暗紫色中毒泡泡脈衝 (GPU 友善，不使用昂貴 drop-shadow 濾鏡) */
 @keyframes poison-bubble-pulse {
   0% {
     fill-opacity: 0.35;
-    stroke-width: 3px;
-    filter: drop-shadow(0 0 4px #7e22ce);
+    stroke-opacity: 0.8;
   }
   50% {
     fill-opacity: 0.55;
-    stroke-width: 5px;
-    filter: drop-shadow(0 0 12px #a855f7);
+    stroke-opacity: 1;
   }
   100% {
     fill-opacity: 0.35;
-    stroke-width: 3px;
-    filter: drop-shadow(0 0 4px #7e22ce);
+    stroke-opacity: 0.8;
   }
 }
 
 .poison-occupied-polygon {
   animation: poison-bubble-pulse 2.5s ease-in-out infinite;
-  stroke: #581c87 !important;
+  stroke: #7e22ce !important;
   fill: #3b0764 !important;
   stroke-dasharray: 6 6;
 }
 
-/* 📢 彈幕廣播從右往左移動 keyframes */
+/* 📢 彈幕廣播從右往左移動 (純 GPU 合成層 translate3d，零重繪零卡頓) */
 @keyframes danmaku-fly {
   0% {
-    left: 100%;
-    transform: translateX(0);
+    transform: translate3d(100vw, 0, 0);
   }
   100% {
-    left: 0%;
-    transform: translateX(-100%);
+    transform: translate3d(-120%, 0, 0);
   }
 }
 
@@ -108,6 +103,7 @@
   animation-name: danmaku-fly;
   animation-iteration-count: 1;
   animation-fill-mode: forwards;
+  will-change: transform;
 }
 
 @keyframes bounce-short {
@@ -117,6 +113,7 @@
 
 .animate-bounce-short {
   animation: bounce-short 2s infinite ease-in-out;
+  will-change: transform;
 }
 
 @keyframes spin-slow {
@@ -126,4 +123,5 @@
 
 .animate-spin-slow {
   animation: spin-slow 8s linear infinite;
+  will-change: transform;
 }
