@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Lock, X, CircleDot, Droplets } from 'lucide-react';
+import { Lock, X, CircleDot, Droplets, Zap, Ban, Flame } from 'lucide-react';
 import { encryptHazardZone } from '../services/crypto';
 import { saveCustomHazardZone } from '../services/storage';
 
 export default function AddHazardZoneModal({ isOpen, onClose, userLocation, cipherCode, onHazardAdded }) {
   const [title, setTitle] = useState('');
-  const [type, setType] = useState('utility_outage');
+  const [type, setType] = useState('utility_outage'); // 'utility_outage', 'power_outage', 'road_blockade', 'casualty_destruction'
   const [radiusMeters, setRadiusMeters] = useState(500);
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,14 +24,17 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
     }
 
     setIsSubmitting(true);
-    let color = '#c2b280';
-    let typeName = '💧 停水停電區 (卡其色無水區)';
+    let color = '#c2b280'; // 💧 停水卡其色
+    let typeName = '💧 停水無水區 (卡其色)';
 
-    if (type === 'road_blockade') {
-      color = '#ea580c';
+    if (type === 'power_outage') {
+      color = '#eab308'; // ⚡ 停電黃色
+      typeName = '⚡ 停電跳電區 (閃爍黃色圈)';
+    } else if (type === 'road_blockade') {
+      color = '#ea580c'; // 🚧 封路橘色
       typeName = '🚧 禁止通行 / 封橋封路區';
     } else if (type === 'casualty_destruction') {
-      color = '#dc2626';
+      color = '#dc2626'; // 💥 傷亡深紅色
       typeName = '💥 傷亡與建物嚴重破壞區';
     }
 
@@ -91,7 +94,7 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="例如：中正區幹線斷水區"
+              placeholder="例如：汐止區饋線跳電 / 停電區"
               className="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-xs text-white focus:border-amber-500 focus:outline-none"
               required
             />
@@ -102,45 +105,71 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
               災害類型 (彩色標示)
             </label>
             <div className="space-y-1 text-[11px]">
+              {/* ⚡ 停電黃色區 */}
+              <button
+                type="button"
+                onClick={() => setType('power_outage')}
+                className={`w-full p-2 rounded-xl font-bold border text-left flex items-center justify-between transition-all ${
+                  type === 'power_outage'
+                    ? 'bg-amber-950 border-amber-500 text-amber-300 shadow font-black'
+                    : 'bg-slate-800 border-slate-700 text-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>⚡ 停電跳電區 (閃爍黃色圈)</span>
+                </div>
+                <span className="w-3 h-3 rounded-full bg-amber-400"></span>
+              </button>
+
+              {/* 💧 停水卡其區 */}
               <button
                 type="button"
                 onClick={() => setType('utility_outage')}
                 className={`w-full p-2 rounded-xl font-bold border text-left flex items-center justify-between transition-all ${
                   type === 'utility_outage'
-                    ? 'bg-[#4a4228] border-[#c2b280] text-[#e8dfbe] shadow'
+                    ? 'bg-[#4a4228] border-[#c2b280] text-[#e8dfbe] shadow font-black'
                     : 'bg-slate-800 border-slate-700 text-slate-300'
                 }`}
               >
                 <div className="flex items-center gap-1.5">
                   <Droplets className="w-3.5 h-3.5 text-[#c2b280]" />
-                  <span>💧 停水區 (卡其色)</span>
+                  <span>💧 停水無水區 (卡其色)</span>
                 </div>
                 <span className="w-3 h-3 rounded-full bg-[#c2b280]"></span>
               </button>
 
+              {/* 🚧 封橋封路 */}
               <button
                 type="button"
                 onClick={() => setType('road_blockade')}
                 className={`w-full p-2 rounded-xl font-bold border text-left flex items-center justify-between transition-all ${
                   type === 'road_blockade'
-                    ? 'bg-orange-950 border-orange-500 text-orange-300 shadow'
+                    ? 'bg-orange-950 border-orange-500 text-orange-300 shadow font-black'
                     : 'bg-slate-800 border-slate-700 text-slate-300'
                 }`}
               >
-                <span>🚧 封橋封路區 (橘色)</span>
+                <div className="flex items-center gap-1.5">
+                  <Ban className="w-3.5 h-3.5 text-orange-400" />
+                  <span>🚧 封橋封路區 (橘色)</span>
+                </div>
                 <span className="w-3 h-3 rounded-full bg-orange-500"></span>
               </button>
 
+              {/* 💥 傷亡破壞 */}
               <button
                 type="button"
                 onClick={() => setType('casualty_destruction')}
                 className={`w-full p-2 rounded-xl font-bold border text-left flex items-center justify-between transition-all ${
                   type === 'casualty_destruction'
-                    ? 'bg-rose-950 border-rose-500 text-rose-300 shadow'
+                    ? 'bg-rose-950 border-rose-500 text-rose-300 shadow font-black'
                     : 'bg-slate-800 border-slate-700 text-slate-300'
                 }`}
               >
-                <span>💥 傷亡破壞區 (深紅)</span>
+                <div className="flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-rose-500" />
+                  <span>💥 傷亡破壞區 (深紅)</span>
+                </div>
                 <span className="w-3 h-3 rounded-full bg-rose-600"></span>
               </button>
             </div>
@@ -173,7 +202,7 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-amber-600 hover:bg-amber-500 py-1.5 rounded-xl font-bold text-xs text-slate-950 shadow flex items-center justify-center gap-1 active:scale-95"
+              className="flex-1 bg-amber-600 hover:bg-amber-500 py-1.5 rounded-xl font-bold text-xs text-slate-950 shadow flex items-center justify-center gap-1 active:scale-95 font-black"
             >
               <Lock className="w-3.5 h-3.5" />
               <span>加密生成範圍圈</span>

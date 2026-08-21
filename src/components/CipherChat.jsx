@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff, ShieldCheck } from 'lucide-react';
 import { encryptMessage, decryptMessage } from '../services/crypto';
-import { getStoredCipherCode, setStoredCipherCode, getStoredMessages, saveMessage } from '../services/storage';
+import { getStoredCipherCode, setStoredCipherCode, getStoredMessages, saveMessage, appendDayTimeLog } from '../services/storage';
 import { sanitizeHTML, checkCipherStrength } from '../utils/security';
 
 export default function CipherChat({ cipherCode, setCipherCode }) {
@@ -110,6 +110,13 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     };
 
     const updated = saveMessage(newMsg);
+    appendDayTimeLog({
+      id: newMsg.id,
+      timestamp: newMsg.timestamp,
+      sender: newMsg.sender,
+      message: cipherText,
+      isEncrypted: newMsg.isEncrypted
+    });
     setMessages(updated);
     setInputText('');
   };
@@ -141,12 +148,12 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
               type="text"
               value={inputCode}
               onChange={(e) => setInputCode(e.target.value)}
-              placeholder="請輸入親友約定暗碼 (如: FAMILY888)"
-              className="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-[15px] font-bold text-amber-300 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+              placeholder="請輸入親友約定暗碼"
+              className="flex-1 min-w-0 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-[15px] font-bold text-amber-300 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
             />
             <button
               type="submit"
-              className="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-[15px] shadow active:scale-95 border border-cyan-300 shrink-0"
+              className="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold px-3 py-2 rounded-xl text-[15px] shadow active:scale-95 border border-cyan-300 shrink-0 whitespace-nowrap"
             >
               設定對齊
             </button>
@@ -294,11 +301,11 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="輸入加密對話訊息..."
-            className="flex-1 bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-[15px] text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+            className="flex-1 min-w-0 bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-[15px] text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
           />
           <button
             type="submit"
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-[15px] shadow active:scale-95 flex items-center gap-1.5 border border-emerald-400 shrink-0"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-2 rounded-xl text-[15px] shadow active:scale-95 flex items-center gap-1 border border-emerald-400 shrink-0 whitespace-nowrap"
           >
             <Send className="w-4 h-4" />
             <span>發送</span>

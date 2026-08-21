@@ -1,0 +1,9 @@
+[
+  {
+    "id": "log-init",
+    "timestamp": "06:00",
+    "sender": "防空指揮中心 / 系統廣播",
+    "message": "歡迎連線台灣急難通 (Taiwan SOS)。廣播與對話 log 已同步持久化儲存。",
+    "isSystem": true
+  }
+]

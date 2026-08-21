@@ -8,7 +8,8 @@ const KEYS = {
   DANGER_FLAGS: 'taiwan_safe_danger_flags',
   HAZARD_ZONES: 'taiwan_safe_hazard_zones',
   DAILY_INTEL: 'taiwan_safe_daily_intel',
-  HEARTBEATS: 'taiwan_safe_heartbeats'
+  HEARTBEATS: 'taiwan_safe_heartbeats',
+  DAY_TIME_LOG: 'taiwan_safe_day_time_log'
 };
 
 // 暗碼保存與讀取
@@ -102,6 +103,27 @@ export function saveDailyIntel(dateStr, content) {
     localStorage.setItem(KEYS.DAILY_INTEL, JSON.stringify(data));
   } catch (e) {
     console.error('Save daily intel failed', e);
+  }
+}
+
+// 📌 彈幕廣播與對話即時動態時間軸 log (day_time_log)
+export function getStoredDayTimeLog() {
+  try {
+    const raw = localStorage.getItem(KEYS.DAY_TIME_LOG);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+export function appendDayTimeLog(entry) {
+  try {
+    const logs = getStoredDayTimeLog();
+    logs.push(entry);
+    localStorage.setItem(KEYS.DAY_TIME_LOG, JSON.stringify(logs));
+    return logs;
+  } catch (e) {
+    return [];
   }
 }
 

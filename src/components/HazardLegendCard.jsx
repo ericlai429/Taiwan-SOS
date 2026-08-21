@@ -27,7 +27,7 @@ export default function HazardLegendCard({
           <Layers className="w-4 h-4 text-amber-400" />
           <span>避難據點與災害敵情圖層</span>
           <span className="text-[10px] text-slate-400 font-normal">
-            ({isExpanded ? '點擊折疊' : '點擊切換 11 大圖層開關'})
+            ({isExpanded ? '點擊折疊' : '點擊切換 12 大圖層開關'})
           </span>
         </div>
         {isExpanded ? (
@@ -152,12 +152,25 @@ export default function HazardLegendCard({
             <span>🌊 沿海與海灘</span>
           </button>
 
-          {/* 💧 停水卡其區 */}
+          {/* ⚡ 停電黃區 */}
           <button
             onClick={() => setShowUtility(!showUtility)}
             className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
               showUtility
-                ? 'bg-[#3d3722] border-[#c2b280] text-[#e8dfbe]'
+                ? 'bg-amber-950 border-amber-500 text-amber-300 shadow-md font-black animate-pulse'
+                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+            }`}
+          >
+            <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>⚡ 停電黃區</span>
+          </button>
+
+          {/* 💧 停水卡其 */}
+          <button
+            onClick={() => setShowUtility(!showUtility)}
+            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+              showUtility
+                ? 'bg-[#3d3722] border-[#c2b280] text-[#e8dfbe] font-black'
                 : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
             }`}
           >
