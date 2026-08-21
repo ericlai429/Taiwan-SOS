@@ -13,6 +13,40 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
   const [onlinePeers, setOnlinePeers] = useState({});
   const [netStatus, setNetStatus] = useState(networkSync.isConnected);
 
+  // 📌 自動偵測/預設手機末 3 碼
+  const [phone3Digits, setPhone3Digits] = useState(() => {
+    try {
+      const saved = localStorage.getItem('taiwan_sos_phone_3digits');
+      if (saved) return saved;
+      const gen = String(Math.floor(100 + Math.random() * 900));
+      localStorage.setItem('taiwan_sos_phone_3digits', gen);
+      return gen;
+    } catch (e) {
+      return '888';
+    }
+  });
+
+  // 📌 自訂發話暱稱
+  const [customNickname, setCustomNickname] = useState(() => {
+    try {
+      return localStorage.getItem('taiwan_sos_custom_nickname') || '親友';
+    } catch (e) {
+      return '親友';
+    }
+  });
+
+  // 📌 匿名模式切換
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
+  // 📌 計算動態發話抬頭 (過濾 XSS) - 宣告於 useEffect 前避免 ReferenceError 造成白畫面
+  const safeNickname = sanitizeHTML(customNickname.trim() || '親友');
+  const safe3Digits = sanitizeHTML(phone3Digits || '888');
+  const currentSenderName = isAnonymous
+    ? `匿名親友 (末3碼: ${safe3Digits})`
+    : `${safeNickname} (末3碼: ${safe3Digits})`;
+
+  const strength = checkCipherStrength(cipherCode);
+
   // 📌 跨裝置 (手機 <-> 電腦/NB) 即時同步頻道設定與監聽 (含 3 分鐘心跳與狀態監測)
   useEffect(() => {
     networkSync.setChannel(cipherCode);
@@ -65,40 +99,6 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     const interval = setInterval(sendPulse, 180000); // 3 分鐘固定頻率
     return () => clearInterval(interval);
   }, [cipherCode, currentSenderName]);
-
-  // 📌 自動偵測/預設手機末 3 碼
-  const [phone3Digits, setPhone3Digits] = useState(() => {
-    try {
-      const saved = localStorage.getItem('taiwan_sos_phone_3digits');
-      if (saved) return saved;
-      const gen = String(Math.floor(100 + Math.random() * 900));
-      localStorage.setItem('taiwan_sos_phone_3digits', gen);
-      return gen;
-    } catch (e) {
-      return '888';
-    }
-  });
-
-  // 📌 自訂發話暱稱
-  const [customNickname, setCustomNickname] = useState(() => {
-    try {
-      return localStorage.getItem('taiwan_sos_custom_nickname') || '親友';
-    } catch (e) {
-      return '親友';
-    }
-  });
-
-  // 📌 匿名模式切換
-  const [isAnonymous, setIsAnonymous] = useState(false);
-
-  // 計算動態發話抬頭 (過濾 XSS)
-  const safeNickname = sanitizeHTML(customNickname.trim() || '親友');
-  const safe3Digits = sanitizeHTML(phone3Digits || '888');
-  const currentSenderName = isAnonymous
-    ? `匿名親友 (末3碼: ${safe3Digits})`
-    : `${safeNickname} (末3碼: ${safe3Digits})`;
-
-  const strength = checkCipherStrength(cipherCode);
 
   // 持久化儲存發話身份
   useEffect(() => {
