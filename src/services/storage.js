@@ -82,21 +82,25 @@ export function saveDangerFlag(flagEncryptedObj) {
 export async function updateDangerFlagLocation(flagId, newLat, newLng, cipherCode) {
   try {
     const flags = getStoredDangerFlags();
+    const effectiveCode = cipherCode || getStoredCipherCode();
     const updated = [];
     for (const f of flags) {
       if (f.id === flagId) {
-        if (f.isEncrypted && cipherCode) {
-          // 解密舊內容、更新座標、重新以 AES-GCM 加密
-          const dec = await decryptDangerFlag(f, cipherCode);
+        let reEnc = null;
+        if (f.isEncrypted && effectiveCode) {
+          const dec = await decryptDangerFlag(f, effectiveCode);
           if (dec) {
+            dec.id = f.id;
             dec.lat = newLat;
             dec.lng = newLng;
-            const reEnc = await encryptDangerFlag(dec, cipherCode);
-            updated.push(reEnc);
-            continue;
+            reEnc = await encryptDangerFlag(dec, effectiveCode);
           }
         }
-        updated.push({ ...f, lat: newLat, lng: newLng });
+        if (reEnc) {
+          updated.push(reEnc);
+        } else {
+          updated.push({ ...f, lat: newLat, lng: newLng });
+        }
       } else {
         updated.push(f);
       }

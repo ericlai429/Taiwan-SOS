@@ -970,6 +970,7 @@ export default function SafeMap({
             );
 
             if (isConfirmed) {
+              marker.setLatLng([newLat, newLng]);
               await updateDangerFlagLocation(flag.id, newLat, newLng, cipherCode);
               await loadAndDecryptData();
               alert(`✅ 已成功將【${flag.title}】更新至新座標 (${newLat}, ${newLng}) 並重新加密！`);

@@ -112,11 +112,11 @@ export async function decryptDangerFlag(encryptedFlag, passcode) {
   }
   try {
     const parsed = JSON.parse(decryptedJson);
-    // 確保解密後包含座標
     return {
       ...parsed,
-      lat: parsed.lat || encryptedFlag.lat,
-      lng: parsed.lng || encryptedFlag.lng
+      id: encryptedFlag.id || parsed.id,
+      lat: encryptedFlag.lat !== undefined ? encryptedFlag.lat : parsed.lat,
+      lng: encryptedFlag.lng !== undefined ? encryptedFlag.lng : parsed.lng
     };
   } catch (e) {
     return null;
