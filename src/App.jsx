@@ -62,7 +62,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none pb-20">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none pb-28 sm:pb-24">
       {/* 頂部長輩高對比標頭 (嚴禁任何按鈕擠出螢幕) */}
       <header className="bg-slate-900 border-b border-slate-800 px-2 py-1.5 sticky top-0 z-50 shadow-md backdrop-blur-md bg-slate-900/95">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-1.5 h-10 overflow-hidden">

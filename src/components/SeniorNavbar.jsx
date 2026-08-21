@@ -107,9 +107,9 @@ export default function SeniorNavbar({ activeTab, setActiveTab, btnLevel = 3 }) 
     );
   }
 
-  // 直向模式 (Portrait)：精簡小型底部橫向導覽列 (按鈕尺寸縮小 50%，z-[2500] 防遮擋)
+  // 直向模式 (Portrait)：精簡小型底部橫向導覽列 (新增 10px 留白與 iOS Home Indicator 安全區域防護)
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[2500] bg-slate-900/95 border-t border-slate-800 backdrop-blur-md px-1 py-0.5">
+    <nav className="fixed bottom-0 left-0 right-0 z-[2500] bg-slate-900/95 border-t border-slate-800 backdrop-blur-md px-1 pt-1 pb-[calc(10px+env(safe-area-inset-bottom,0px))]">
       <div className="max-w-md mx-auto flex justify-around items-center">
         {tabs.map((t) => {
           const Icon = t.icon;
