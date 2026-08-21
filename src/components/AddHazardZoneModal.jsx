@@ -24,7 +24,7 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
     }
 
     setIsSubmitting(true);
-    let color = '#c2b280'; // 💧 停水卡其色
+    let color = '#c2b280'; // 💧 停水區域
     let typeName = '💧 停水無水區 (卡其色)';
 
     if (type === 'power_outage') {
@@ -122,7 +122,7 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
                 <span className="w-3 h-3 rounded-full bg-amber-400"></span>
               </button>
 
-              {/* 💧 停水卡其區 */}
+              {/* 💧 停水區域 */}
               <button
                 type="button"
                 onClick={() => setType('utility_outage')}
@@ -134,7 +134,7 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
               >
                 <div className="flex items-center gap-1.5">
                   <Droplets className="w-3.5 h-3.5 text-[#c2b280]" />
-                  <span>💧 停水無水區 (卡其色)</span>
+                  <span>💧 停水區域 (卡其色)</span>
                 </div>
                 <span className="w-3 h-3 rounded-full bg-[#c2b280]"></span>
               </button>

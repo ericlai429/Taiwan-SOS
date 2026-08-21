@@ -165,7 +165,7 @@ export default function HazardLegendCard({
             <span>⚡ 停電黃區</span>
           </button>
 
-          {/* 💧 停水卡其 */}
+          {/* 💧 停水區域 */}
           <button
             onClick={() => setShowUtility(!showUtility)}
             className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
@@ -175,7 +175,7 @@ export default function HazardLegendCard({
             }`}
           >
             <Droplets className="w-4 h-4 text-[#c2b280] shrink-0" />
-            <span>💧 停水卡其</span>
+            <span>💧 停水區域</span>
           </button>
 
           {/* 🚧 封橋封路 */}
