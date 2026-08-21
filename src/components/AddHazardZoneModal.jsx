@@ -87,13 +87,15 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
 
         <form onSubmit={handleSubmit} className="space-y-2 text-xs">
           <div>
-            <label className="block font-bold text-slate-200 mb-1">
-              災害名稱 *
+            <label className="block font-bold text-slate-200 mb-1 flex justify-between">
+              <span>災害名稱 *</span>
+              <span className="text-[10px] text-slate-400 font-normal">最多 200 字</span>
             </label>
             <input
               type="text"
+              maxLength={200}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value.substring(0, 200))}
               placeholder="例如：汐止區饋線跳電 / 停電區"
               className="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-xs text-white focus:border-amber-500 focus:outline-none"
               required

@@ -8,7 +8,7 @@ const GITHUB_ISSUES_URL = 'https://github.com/ericlai429/Taiwan-SOS/issues/new';
 const GITHUB_PR_LOG_URL = 'https://github.com/ericlai429/Taiwan-SOS/blob/main/pr_log.md';
 
 // ========== 防護常數 ==========
-const MAX_CHAR = 500;          // 每則上限 500 字
+const MAX_CHAR = 200;          // 每則上限 200 字 (防止外部 Buffer/攻擊)
 const MAX_DAILY = 3;           // 每日上限 3 篇
 const COOLDOWN_SEC = 30;       // 兩次提交間隔至少 30 秒 (防 DOS 連送)
 const MAX_STORED = 50;         // localStorage 最多保留 50 筆 (防爆容量)

@@ -498,9 +498,10 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
         <div className="flex gap-2">
           <input
             type="text"
+            maxLength={200}
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder={`輸入加密對話訊息... (${chLabel})`}
+            onChange={(e) => setInputText(e.target.value.substring(0, 200))}
+            placeholder={`輸入加密訊息 (最多200字)... (${chLabel})`}
             className="flex-1 min-w-0 bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-[15px] text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
           />
           <button

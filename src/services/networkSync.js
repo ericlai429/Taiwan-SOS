@@ -4,6 +4,7 @@
  */
 
 import mqtt from 'mqtt';
+import { checkRateLimitGuard, recordSecurityLog } from './securityLogger';
 
 class RealtimeNetworkSync {
   constructor() {
@@ -119,16 +120,44 @@ class RealtimeNetworkSync {
       });
 
       this.client.on('message', (topic, message) => {
-        // 📌 BUG FIX：MQTT 收訊時也要比對 topic 是否為當前頻道
+        // 📌 比對 topic 是否為當前頻道
         if (topic !== this.currentTopic) return;
+
+        // 🛡️ 高頻連鎖攻擊防禦：1 秒內超過 15 個封包則觸發速率限制並寫入安全日誌
+        if (!checkRateLimitGuard('mqtt_incoming_flood', 15, 1000)) {
+          return;
+        }
+
         try {
           const strPayload = message.toString();
+
+          // 🛡️ 異常超長封包攻擊防禦 (> 4096 bytes)
+          if (strPayload.length > 4096) {
+            recordSecurityLog({
+              attackType: '🛑 異常超大網路封包攻擊 (Giant Payload Flooding)',
+              threatLevel: 'CRITICAL',
+              source: `MQTT Topic: ${topic}`,
+              details: `接收到異常大小為 ${strPayload.length} bytes 之惡意灌水封包`,
+              actionTaken: '主動丟棄該封包並阻止解析'
+            });
+            return;
+          }
+
           const parsed = JSON.parse(strPayload);
 
           if (parsed && parsed.senderId !== this.deviceId) {
             this.notifySubscribers(parsed.payload, 'remote_mqtt');
           }
-        } catch (err) {}
+        } catch (err) {
+          recordSecurityLog({
+            attackType: '⚠️ 畸形封包滲透測試 (Malformed Packet Injection)',
+            threatLevel: 'MEDIUM',
+            source: `MQTT Topic: ${topic}`,
+            details: '接收到非標準 JSON 格式之畸形網絡資料封包',
+            rawSnippet: String(message).substring(0, 60),
+            actionTaken: '安全拒絕並記錄審計日誌'
+          });
+        }
       });
 
       this.client.on('error', () => {

@@ -113,6 +113,44 @@ export async function updateDangerFlagLocation(flagId, newLat, newLng, cipherCod
   }
 }
 
+export async function updateDangerFlagDetails(flagId, updatedFields, cipherCode) {
+  try {
+    const flags = getStoredDangerFlags();
+    const effectiveCode = cipherCode || getStoredCipherCode();
+    const updated = [];
+    for (const f of flags) {
+      if (f.id === flagId) {
+        const reEnc = await encryptDangerFlag({
+          ...updatedFields,
+          id: flagId,
+          lat: updatedFields.lat !== undefined ? updatedFields.lat : f.lat,
+          lng: updatedFields.lng !== undefined ? updatedFields.lng : f.lng
+        }, effectiveCode);
+        updated.push(reEnc);
+      } else {
+        updated.push(f);
+      }
+    }
+    localStorage.setItem(KEYS.DANGER_FLAGS, JSON.stringify(updated));
+    return updated;
+  } catch (e) {
+    console.error('Update danger flag details failed', e);
+    return getStoredDangerFlags();
+  }
+}
+
+export function deleteDangerFlag(flagId) {
+  try {
+    const flags = getStoredDangerFlags();
+    const filtered = flags.filter(f => f.id !== flagId);
+    localStorage.setItem(KEYS.DANGER_FLAGS, JSON.stringify(filtered));
+    return filtered;
+  } catch (e) {
+    console.error('Delete danger flag failed', e);
+    return getStoredDangerFlags();
+  }
+}
+
 // 自訂彩色災害範圍圈儲存 (Encrypted Hazard Zones)
 export function getStoredCustomHazardZones() {
   try {

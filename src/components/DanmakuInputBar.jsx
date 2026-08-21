@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Clock, Radio, GripHorizontal } from 'lucide-react';
+import { inspectAndSanitizeInput, checkRateLimitGuard } from '../services/securityLogger';
 
 export default function DanmakuInputBar({ onSendDanmaku }) {
   const [text, setText] = useState('');
@@ -84,7 +85,20 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
     if (!text.trim()) return;
     if (cooldownSec > 0) return;
 
-    onSendDanmaku(text.trim());
+    // 🛡️ 高頻連鎖攻擊防護
+    if (!checkRateLimitGuard('danmaku_user_submit', 3, 3000)) {
+      alert('⚠️ 偵測到高頻突發發話請求，系統已啟動安全防禦機制並記錄審計 Log！');
+      return;
+    }
+
+    // 🛡️ 200 字上限與腳本注入審查
+    const { sanitized, errorMsg } = inspectAndSanitizeInput(text, '即時彈幕廣播');
+    if (errorMsg) {
+      alert(errorMsg);
+    }
+    if (!sanitized) return;
+
+    onSendDanmaku(sanitized);
     setText('');
     setCooldownSec(30);
   };
@@ -120,9 +134,9 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
         <input
           type="text"
           value={text}
-          maxLength={40}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={cooldownSec > 0 ? `請等待倒數冷卻 (${cooldownSec}s)...` : "廣播發話 (如：台北車站備有水源)..."}
+          maxLength={200}
+          onChange={(e) => setText(e.target.value.substring(0, 200))}
+          placeholder={cooldownSec > 0 ? `請等待倒數冷卻 (${cooldownSec}s)...` : "廣播發話 (最多200字，如：台北車站備有水源)..."}
           disabled={cooldownSec > 0}
           className="flex-1 bg-slate-950 text-white placeholder-slate-400 text-xs font-semibold px-2.5 py-1 h-8 rounded-lg border border-slate-700 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 disabled:opacity-50 transition-all min-w-0"
         />

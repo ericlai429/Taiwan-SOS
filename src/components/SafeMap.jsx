@@ -140,7 +140,8 @@ export default function SafeMap({
     missileGroup: null,
     coastalGroup: null,
     invasionGroup: null,
-    osintGroup: null
+    osintGroup: null,
+    draftFlagMarker: null
   });
 
   const [internalLocation, setInternalLocation] = useState({ lat: 25.0645, lng: 121.6570 });
@@ -281,23 +282,33 @@ export default function SafeMap({
   const [decryptedFlags, setDecryptedFlags] = useState([]);
   const [decryptedCustomHazards, setDecryptedCustomHazards] = useState([]);
 
-  // Modal 狀態
+  // Modal 與拖曳定位狀態
   const [isAddFlagOpen, setIsAddFlagOpen] = useState(false);
   const [isAddHazardOpen, setIsAddHazardOpen] = useState(false);
   const [isDailyIntelOpen, setIsDailyIntelOpen] = useState(false);
   const [isGPSShareOpen, setIsGPSShareOpen] = useState(false);
   const [isIntelCrawlerOpen, setIsIntelCrawlerOpen] = useState(false);
+  const [draftFlagLocation, setDraftFlagLocation] = useState(null);
+  const [editingFlag, setEditingFlag] = useState(null);
 
-  // 全域投票與情報查證 Hook (支援 Leaflet Popup 1-click 直接審核真偽)
+  // 全域投票與情報查證 Hook (支援 Leaflet Popup 1-click 直接審核真偽與雙擊編輯)
   useEffect(() => {
     window.__voteIntel = (intelId, choice) => {
       const res = voteIntelTruth(intelId, choice);
       alert(res.message);
     };
+    window.__editDangerFlag = (flagId) => {
+      const target = decryptedFlags.find(f => f.id === flagId);
+      if (target && target.isUnlocked) {
+        setEditingFlag(target);
+        setIsAddFlagOpen(true);
+      }
+    };
     return () => {
       delete window.__voteIntel;
+      delete window.__editDangerFlag;
     };
-  }, []);
+  }, [decryptedFlags]);
 
   // 1. 初始化 Leaflet 地圖
   useEffect(() => {
@@ -419,6 +430,63 @@ export default function SafeMap({
   useEffect(() => {
     loadAndDecryptData();
   }, [loadAndDecryptData]);
+
+  // 📌 即時手動拖曳定位「草稿危險旗標」
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (!draftFlagLocation) {
+      if (layersRef.current.draftFlagMarker) {
+        map.removeLayer(layersRef.current.draftFlagMarker);
+        layersRef.current.draftFlagMarker = null;
+      }
+      return;
+    }
+
+    const draftIcon = L.divIcon({
+      className: 'draft-flag-icon cursor-grab active:cursor-grabbing',
+      html: `
+        <div class="relative flex flex-col items-center select-none" style="width:160px; height:65px;">
+          <div class="bg-rose-600 text-white font-black px-2.5 py-1 rounded-xl shadow-2xl border-2 border-yellow-300 text-xs flex items-center justify-center gap-1 whitespace-nowrap z-20 animate-pulse">
+            <span>🚩</span>
+            <span>拖曳至目標災害點</span>
+            <span class="text-[11px] text-yellow-200 font-black animate-bounce">↓</span>
+          </div>
+          <div class="relative flex flex-col items-center -mt-0.5 z-10">
+            <div class="w-7 h-7 flex items-center justify-center animate-cone-3d">
+              <svg viewBox="0 0 24 24" width="26" height="26" class="drop-shadow-2xl">
+                <polygon points="12,22 4,5 12,2" fill="#ff003c" />
+                <polygon points="12,22 20,5 12,2" fill="#880015" />
+                <polygon points="12,2 4,5 20,5" fill="#facc15" />
+                <line x1="12" y1="2" x2="12" y2="23" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div class="absolute -bottom-1.5 w-4 h-2 bg-rose-500 rounded-full opacity-90 animate-ping"></div>
+            <div class="absolute -bottom-1 w-2.5 h-2.5 bg-yellow-300 rounded-full border-2 border-white shadow"></div>
+          </div>
+        </div>
+      `,
+      iconSize: [160, 65],
+      iconAnchor: [80, 65],
+      popupAnchor: [0, -65]
+    });
+
+    if (!layersRef.current.draftFlagMarker) {
+      layersRef.current.draftFlagMarker = L.marker([draftFlagLocation.lat, draftFlagLocation.lng], {
+        icon: draftIcon,
+        draggable: true,
+        zIndexOffset: 10000
+      }).addTo(map);
+
+      layersRef.current.draftFlagMarker.on('dragend', (e) => {
+        const p = e.target.getLatLng();
+        setDraftFlagLocation({ lat: Number(p.lat.toFixed(4)), lng: Number(p.lng.toFixed(4)) });
+      });
+    } else {
+      layersRef.current.draftFlagMarker.setLatLng([draftFlagLocation.lat, draftFlagLocation.lng]);
+    }
+  }, [draftFlagLocation]);
 
   // 4. 定位標籤與 5km 範圍圈 (獨立更新，不重繪所有 POI 標記)
   useEffect(() => {
@@ -954,12 +1022,29 @@ export default function SafeMap({
           draggable: Boolean(isUnlocked)
         }).bindPopup(
           isUnlocked
-            ? `<div style="padding:4px;"><h4 style="font-weight:bold; color:#dc2626; margin:0 0 4px 0;">🚩 ${flag.title}</h4><p style="margin:2px 0;">${flag.description || '自訂危險點位'}</p><p style="font-size:10px; color:#38bdf8; margin-top:4px; font-weight:bold;">💡 提示：按住下方紅色尖錐可手動拖曳重新定位</p></div>`
+            ? `<div style="padding:4px; min-width:180px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <h4 style="font-weight:bold; color:#dc2626; margin:0;">🚩 ${flag.title}</h4>
+                  <span style="font-size:10px; background:#e11d48; color:#fff; font-weight:bold; padding:1px 5px; rounded:4px;">${flag.level === 'high' ? '🚨 高危險' : flag.level === 'medium' ? '⚠️ 中警戒' : '🔍 威脅'}</span>
+                </div>
+                <p style="margin:3px 0; font-size:12px; color:#cbd5e1;">${flag.description || '自訂危險點位'}</p>
+                <div style="display:flex; gap:6px; margin-top:8px; border-top:1px solid #334155; padding-top:6px;">
+                  <button onclick="window.__editDangerFlag('${flag.id}')" style="background:#eab308; color:#0f172a; font-size:11px; font-weight:bold; padding:3px 8px; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; gap:2px;">✏️ 編輯修改情報</button>
+                </div>
+                <p style="font-size:9.5px; color:#38bdf8; margin-top:4px; font-weight:bold;">💡 提示：雙擊地圖旗標亦可直接編輯，按住下方紅色尖錐可拖曳重定位</p>
+              </div>`
             : `<div style="padding:4px;"><h4 style="color:#d97706;">🔒 暗碼保護情報</h4></div>`,
           { autoPan: false, keepInView: true }
         );
 
         if (isUnlocked) {
+          // 📌 雙擊旗標 (dblclick) 直接打開情報編輯視窗
+          marker.on('dblclick', (e) => {
+            L.DomEvent.stopPropagation(e);
+            setEditingFlag(flag);
+            setIsAddFlagOpen(true);
+          });
+
           marker.on('dragend', async (e) => {
             const newPos = e.target.getLatLng();
             const newLat = Number(newPos.lat.toFixed(4));
@@ -1220,10 +1305,43 @@ export default function SafeMap({
           </button>
         </Tooltip>
 
-        {/* 4. 標記危險地區 (旗標) */}
-        <Tooltip text="標記危險區：放置 AES-GCM 暗碼加密危險旗標" position="left">
+      {/* 🚩 即時拖曳旗標定位確認頂部浮動橫條 */}
+      {draftFlagLocation && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[2500] bg-slate-950/95 border-2 border-rose-500 rounded-2xl p-2 sm:p-2.5 shadow-2xl backdrop-blur-md flex items-center gap-2 max-w-[94vw] animate-fadeIn">
+          <div className="flex items-center gap-1.5 text-xs text-rose-300 font-black truncate">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+            <span className="truncate">按住紅色尖錐拖曳至災害點</span>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => {
+                setEditingFlag(null);
+                setIsAddFlagOpen(true);
+              }}
+              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow active:scale-95 flex items-center gap-1"
+            >
+              <span>✅ 確定位置並填寫資料</span>
+            </button>
+            <button
+              onClick={() => setDraftFlagLocation(null)}
+              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700"
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 4. 標記危險地區 (旗標) */}
+        <Tooltip text="標記危險區：放置 AES-GCM 暗碼加密危險旗標 (拖曳定位後填寫)" position="left">
           <button
-            onClick={() => setIsAddFlagOpen(true)}
+            onClick={() => {
+              setEditingFlag(null);
+              const map = mapInstanceRef.current;
+              const center = map ? map.getCenter() : (userLocation || { lat: 25.0645, lng: 121.6570 });
+              const target = { lat: Number(center.lat.toFixed(4)), lng: Number(center.lng.toFixed(4)) };
+              setDraftFlagLocation(target);
+            }}
             className={`bg-rose-950/95 border border-rose-500 hover:bg-rose-900 text-rose-300 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
               btnLevel === 1 ? 'w-[25px] h-[25px] p-0 rounded-lg text-[10px]' :
               btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
@@ -1263,10 +1381,20 @@ export default function SafeMap({
 
       <AddDangerFlagModal
         isOpen={isAddFlagOpen}
-        onClose={() => setIsAddFlagOpen(false)}
+        onClose={() => {
+          setIsAddFlagOpen(false);
+          setDraftFlagLocation(null);
+          setEditingFlag(null);
+        }}
         userLocation={userLocation}
+        targetLocation={draftFlagLocation}
+        editingFlag={editingFlag}
         cipherCode={cipherCode}
-        onFlagAdded={loadAndDecryptData}
+        onFlagAdded={() => {
+          loadAndDecryptData();
+          setDraftFlagLocation(null);
+          setEditingFlag(null);
+        }}
       />
 
       <AddHazardZoneModal

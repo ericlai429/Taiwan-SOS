@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Save, X } from 'lucide-react';
 import { getDailyIntel, saveDailyIntel } from '../services/storage';
+import { inspectAndSanitizeInput } from '../services/securityLogger';
 
 export default function DailyIntelModal({ isOpen, onClose }) {
   const todayStr = new Date().toISOString().split('T')[0];
@@ -19,7 +20,12 @@ export default function DailyIntelModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const handleSave = () => {
-    saveDailyIntel(selectedDate, intelText);
+    const { sanitized, errorMsg } = inspectAndSanitizeInput(intelText, '每日地圖情報筆記');
+    if (errorMsg) {
+      alert(errorMsg);
+    }
+    saveDailyIntel(selectedDate, sanitized);
+    setIntelText(sanitized);
     setSavedStatus('✅ 已成功記錄當日地圖情報！');
     setTimeout(() => setSavedStatus(''), 3000);
   };
@@ -52,12 +58,14 @@ export default function DailyIntelModal({ isOpen, onClose }) {
           </div>
 
           <div>
-            <label className="block font-bold text-slate-300 mb-1">
-              【{selectedDate}】情報筆記：
+            <label className="block font-bold text-slate-300 mb-1 flex justify-between">
+              <span>【{selectedDate}】情報筆記：</span>
+              <span className="text-[10px] text-slate-400 font-normal">最多 200 字</span>
             </label>
             <textarea
+              maxLength={200}
               value={intelText}
-              onChange={(e) => setIntelText(e.target.value)}
+              onChange={(e) => setIntelText(e.target.value.substring(0, 200))}
               placeholder="在此紀錄今日道路狀況、避難處所開展、物資發放情形..."
               rows={3}
               className="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-xs text-white focus:border-amber-500 focus:outline-none"
