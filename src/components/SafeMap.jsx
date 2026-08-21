@@ -38,16 +38,16 @@ import osintVectorsData from '../data/osint_vectors.json';
 function createSmartMarkerIcon(iconSymbol, name, category, level) {
   const borderColor =
     category === 'shelter' ? 'border-emerald-500' :
-    category === 'medical' ? 'border-rose-500' :
-    category === 'supplies' ? 'border-amber-500' :
+    category === 'medical' ? 'border-pink-500' :
+    category === 'supplies' ? 'border-yellow-400' :
     category === 'police' ? 'border-blue-500' :
     category === 'fire' ? 'border-orange-500' :
     category === 'community' ? 'border-purple-500' : 'border-teal-500';
 
   const dotBg =
     category === 'shelter' ? 'bg-emerald-600' :
-    category === 'medical' ? 'bg-rose-600' :
-    category === 'supplies' ? 'bg-amber-600' :
+    category === 'medical' ? 'bg-pink-600' :
+    category === 'supplies' ? 'bg-yellow-500 text-slate-950 font-black' :
     category === 'police' ? 'bg-blue-600' :
     category === 'fire' ? 'bg-orange-600' :
     category === 'community' ? 'bg-purple-600' : 'bg-teal-600';
@@ -265,8 +265,9 @@ export default function SafeMap({
   const [showHighRisk, setShowHighRisk] = useState(true);
   const [showDangerFlags, setShowDangerFlags] = useState(true);
 
-  // 災害、飛彈/沿海預警與敵入侵開關
-  const [showUtility, setShowUtility] = useState(true);
+  // 災害、飛彈/沿海預警與敵入侵開關 (單一獨立開關)
+  const [showPowerOutage, setShowPowerOutage] = useState(true);
+  const [showWaterOutage, setShowWaterOutage] = useState(true);
   const [showBlockade, setShowBlockade] = useState(true);
   const [showCasualty, setShowCasualty] = useState(true);
   const [showMissile, setShowMissile] = useState(true);
@@ -434,21 +435,29 @@ export default function SafeMap({
 
     allHazards.forEach(h => {
       let isVisible = false;
-      if (h.type === 'utility_outage' && showUtility) isVisible = true;
+      if (h.type === 'power_outage' && showPowerOutage) isVisible = true;
+      if (h.type === 'utility_outage' && showWaterOutage) isVisible = true;
       if (h.type === 'road_blockade' && showBlockade) isVisible = true;
       if (h.type === 'casualty_destruction' && showCasualty) isVisible = true;
 
       if (isVisible) {
+        const zoneColor =
+          h.type === 'power_outage' ? '#facc15' :
+          h.type === 'utility_outage' ? '#c2b280' :
+          h.type === 'road_blockade' ? '#ff6600' :
+          h.type === 'casualty_destruction' ? '#880015' : (h.color || '#c2b280');
+
         const circle = L.circle([h.lat, h.lng], {
           radius: h.radiusMeters || 500,
-          color: h.color || '#c2b280',
-          fillColor: h.fillColor || h.color || '#c2b280',
-          fillOpacity: h.fillOpacity || 0.3,
+          color: zoneColor,
+          fillColor: zoneColor,
+          fillOpacity: h.fillOpacity || 0.35,
           weight: h.type === 'road_blockade' ? 4 : 3,
           dashArray: h.type === 'road_blockade' ? '8, 8' : null
         });
 
         const iconSymbol =
+          h.type === 'power_outage' ? '⚡' :
           h.type === 'utility_outage' ? '💧' :
           h.type === 'road_blockade' ? '🚧' : '💥';
 
@@ -570,7 +579,7 @@ export default function SafeMap({
         }
       });
     }
-  }, [showUtility, showBlockade, showCasualty, showMissile, showCoastal, showInvasion, decryptedCustomHazards]);
+  }, [showPowerOutage, showWaterOutage, showBlockade, showCasualty, showMissile, showCoastal, showInvasion, decryptedCustomHazards]);
 
   // 6. 😈 敵入侵/佔領區推演 (獨立更新，不重繪其他圖層)
   useEffect(() => {
@@ -1022,7 +1031,9 @@ export default function SafeMap({
           showMedical={showMedical} setShowMedical={setShowMedical}
           showSupplies={showSupplies} setShowSupplies={setShowSupplies}
           showFacilities={showFacilities} setShowFacilities={setShowFacilities}
-          showUtility={showUtility} setShowUtility={setShowUtility}
+          showHighRisk={showHighRisk} setShowHighRisk={setShowHighRisk}
+          showPowerOutage={showPowerOutage} setShowPowerOutage={setShowPowerOutage}
+          showWaterOutage={showWaterOutage} setShowWaterOutage={setShowWaterOutage}
           showBlockade={showBlockade} setShowBlockade={setShowBlockade}
           showCasualty={showCasualty} setShowCasualty={setShowCasualty}
           showRadius={useRadiusFilter} setShowRadius={setUseRadiusFilter}

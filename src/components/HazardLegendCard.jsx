@@ -6,7 +6,9 @@ export default function HazardLegendCard({
   showMedical, setShowMedical,
   showSupplies, setShowSupplies,
   showFacilities, setShowFacilities,
-  showUtility, setShowUtility,
+  showHighRisk, setShowHighRisk,
+  showPowerOutage, setShowPowerOutage,
+  showWaterOutage, setShowWaterOutage,
   showBlockade, setShowBlockade,
   showCasualty, setShowCasualty,
   showRadius, setShowRadius,
@@ -27,7 +29,7 @@ export default function HazardLegendCard({
           <Layers className="w-4 h-4 text-amber-400" />
           <span>避難據點與災害敵情圖層</span>
           <span className="text-[10px] text-slate-400 font-normal">
-            ({isExpanded ? '點擊折疊' : '點擊切換 12 大圖層開關'})
+            ({isExpanded ? '點擊折疊' : '點擊切換 13 大單一獨立圖層'})
           </span>
         </div>
         {isExpanded ? (
@@ -37,10 +39,10 @@ export default function HazardLegendCard({
         )}
       </button>
 
-      {/* 展開後的 11 大圖層按鈕 */}
+      {/* 展開後的 13 大單一獨立圖層按鈕 (高對比色彩分明) */}
       {isExpanded && (
         <div className="p-2 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-1.5 animate-fadeIn">
-          {/* 🛡️ 安全避難 */}
+          {/* 1. 🛡️ 安全避難 - 翡翠綠 */}
           {setShowShelters && (
             <button
               onClick={() => setShowShelters(!showShelters)}
@@ -55,37 +57,37 @@ export default function HazardLegendCard({
             </button>
           )}
 
-          {/* 🏥 醫療急救 */}
+          {/* 2. 🏥 醫療急救 - 螢光桃紅 */}
           {setShowMedical && (
             <button
               onClick={() => setShowMedical(!showMedical)}
               className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
                 showMedical
-                  ? 'bg-rose-950 border-rose-500 text-rose-300 shadow-md font-black'
+                  ? 'bg-pink-950 border-pink-500 text-pink-300 shadow-md font-black'
                   : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
               }`}
             >
-              <Stethoscope className="w-4 h-4 text-rose-400 shrink-0" />
+              <Stethoscope className="w-4 h-4 text-pink-400 shrink-0" />
               <span>🏥 醫療急救</span>
             </button>
           )}
 
-          {/* 📦 戰備物資 */}
+          {/* 3. 📦 戰備物資 - 亮金色 */}
           {setShowSupplies && (
             <button
               onClick={() => setShowSupplies(!showSupplies)}
               className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
                 showSupplies
-                  ? 'bg-amber-950 border-amber-500 text-amber-300 shadow-md font-black'
+                  ? 'bg-yellow-950 border-yellow-500 text-yellow-300 shadow-md font-black'
                   : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
               }`}
             >
-              <PackageCheck className="w-4 h-4 text-amber-400 shrink-0" />
+              <PackageCheck className="w-4 h-4 text-yellow-400 shrink-0" />
               <span>📦 戰備物資</span>
             </button>
           )}
 
-          {/* 👮 警消診所 */}
+          {/* 4. 👮 警消診所 - 皇家深藍 */}
           {setShowFacilities && (
             <button
               onClick={() => setShowFacilities(!showFacilities)}
@@ -100,122 +102,140 @@ export default function HazardLegendCard({
             </button>
           )}
 
-          {/* 😈 敵佔領區 */}
-          <button
-            onClick={() => setShowInvasion(!showInvasion)}
-            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
-              showInvasion
-                ? 'bg-purple-950 border-purple-500 text-purple-300 shadow-md font-black'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
-            }`}
-          >
-            <Skull className="w-4 h-4 text-purple-400 shrink-0" />
-            <span>😈 敵佔領區</span>
-          </button>
+          {/* 5. ⚡ 關鍵電廠與水廠 - 暗琥珀金 */}
+          {setShowHighRisk && (
+            <button
+              onClick={() => setShowHighRisk(!showHighRisk)}
+              className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+                showHighRisk
+                  ? 'bg-amber-950 border-amber-500 text-amber-300 shadow-md font-black'
+                  : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+              }`}
+            >
+              <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>⚡ 關鍵電廠水廠</span>
+            </button>
+          )}
 
-          {/* 🚨 飛彈熱區 */}
-          <button
-            onClick={() => setShowMissile(!showMissile)}
-            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
-              showMissile
-                ? 'bg-rose-950 border-rose-500 text-rose-300 shadow-md'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
-            }`}
-          >
-            <AlertOctagon className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>🚨 飛彈熱區</span>
-          </button>
+          {/* 6. 😈 敵佔領區 - 劇毒深紫 */}
+          {setShowInvasion && (
+            <button
+              onClick={() => setShowInvasion(!showInvasion)}
+              className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+                showInvasion
+                  ? 'bg-purple-950 border-purple-500 text-purple-300 shadow-md font-black'
+                  : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+              }`}
+            >
+              <Skull className="w-4 h-4 text-purple-400 shrink-0" />
+              <span>😈 敵佔領區</span>
+            </button>
+          )}
 
-          {/* ⚡ 關鍵電廠與水廠危險熱區 */}
-          <button
-            onClick={() => setShowMissile(!showMissile)}
-            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
-              showMissile
-                ? 'bg-amber-950 border-amber-500 text-amber-300 shadow-md font-black animate-pulse'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
-            }`}
-          >
-            <Zap className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>⚡ 關鍵電廠與水廠</span>
-          </button>
+          {/* 7. 🚨 飛彈熱區 - 霓虹大紅 */}
+          {setShowMissile && (
+            <button
+              onClick={() => setShowMissile(!showMissile)}
+              className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+                showMissile
+                  ? 'bg-red-950 border-red-500 text-red-300 shadow-md font-black'
+                  : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+              }`}
+            >
+              <AlertOctagon className="w-4 h-4 text-red-400 shrink-0" />
+              <span>🚨 飛彈熱區</span>
+            </button>
+          )}
 
-          {/* 🌊 沿海預警 */}
-          <button
-            onClick={() => setShowCoastal(!showCoastal)}
-            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
-              showCoastal
-                ? 'bg-orange-950 border-orange-500 text-orange-300 shadow-md'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
-            }`}
-          >
-            <Waves className="w-4 h-4 text-orange-400 shrink-0" />
-            <span>🌊 沿海與海灘</span>
-          </button>
+          {/* 8. 🌊 沿海與海灘 - 藍綠海浪 */}
+          {setShowCoastal && (
+            <button
+              onClick={() => setShowCoastal(!showCoastal)}
+              className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+                showCoastal
+                  ? 'bg-cyan-950 border-cyan-500 text-cyan-300 shadow-md font-black'
+                  : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+              }`}
+            >
+              <Waves className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span>🌊 沿海與海灘</span>
+            </button>
+          )}
 
-          {/* ⚡ 停電黃區 */}
-          <button
-            onClick={() => setShowUtility(!showUtility)}
-            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
-              showUtility
-                ? 'bg-amber-950 border-amber-500 text-amber-300 shadow-md font-black animate-pulse'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
-            }`}
-          >
-            <Zap className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>⚡ 停電黃區</span>
-          </button>
+          {/* 9. ⚡ 停電黃區 - 螢光亮黃 */}
+          {setShowPowerOutage && (
+            <button
+              onClick={() => setShowPowerOutage(!showPowerOutage)}
+              className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+                showPowerOutage
+                  ? 'bg-amber-950 border-yellow-400 text-yellow-200 shadow-md font-black'
+                  : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+              }`}
+            >
+              <Zap className="w-4 h-4 text-yellow-300 shrink-0" />
+              <span>⚡ 停電黃區</span>
+            </button>
+          )}
 
-          {/* 💧 停水區域 */}
-          <button
-            onClick={() => setShowUtility(!showUtility)}
-            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
-              showUtility
-                ? 'bg-[#3d3722] border-[#c2b280] text-[#e8dfbe] font-black'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
-            }`}
-          >
-            <Droplets className="w-4 h-4 text-[#c2b280] shrink-0" />
-            <span>💧 停水區域</span>
-          </button>
+          {/* 10. 💧 停水區域 - 沙漠卡其 */}
+          {setShowWaterOutage && (
+            <button
+              onClick={() => setShowWaterOutage(!showWaterOutage)}
+              className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+                showWaterOutage
+                  ? 'bg-[#3d3722] border-[#c2b280] text-[#e8dfbe] shadow-md font-black'
+                  : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+              }`}
+            >
+              <Droplets className="w-4 h-4 text-[#c2b280] shrink-0" />
+              <span>💧 停水區域</span>
+            </button>
+          )}
 
-          {/* 🚧 封橋封路 */}
-          <button
-            onClick={() => setShowBlockade(!showBlockade)}
-            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
-              showBlockade
-                ? 'bg-orange-950 border-orange-500 text-orange-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
-            }`}
-          >
-            <Ban className="w-4 h-4 text-orange-400 shrink-0" />
-            <span>🚧 封橋封路</span>
-          </button>
+          {/* 11. 🚧 封橋封路 - 工程亮橘 */}
+          {setShowBlockade && (
+            <button
+              onClick={() => setShowBlockade(!showBlockade)}
+              className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+                showBlockade
+                  ? 'bg-orange-950 border-orange-500 text-orange-300 shadow-md font-black'
+                  : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+              }`}
+            >
+              <Ban className="w-4 h-4 text-orange-400 shrink-0" />
+              <span>🚧 封橋封路</span>
+            </button>
+          )}
 
-          {/* 💥 傷亡破壞 */}
-          <button
-            onClick={() => setShowCasualty(!showCasualty)}
-            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
-              showCasualty
-                ? 'bg-rose-950 border-rose-500 text-rose-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
-            }`}
-          >
-            <Flame className="w-4 h-4 text-rose-500 shrink-0" />
-            <span>💥 傷亡破壞</span>
-          </button>
+          {/* 12. 💥 傷亡破壞 - 深酒紅 */}
+          {setShowCasualty && (
+            <button
+              onClick={() => setShowCasualty(!showCasualty)}
+              className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+                showCasualty
+                  ? 'bg-rose-950 border-rose-600 text-rose-300 shadow-md font-black'
+                  : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+              }`}
+            >
+              <Flame className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>💥 傷亡破壞</span>
+            </button>
+          )}
 
-          {/* 🟢 安全半徑 */}
-          <button
-            onClick={() => setShowRadius(!showRadius)}
-            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
-              showRadius
-                ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>🟢 5km 範圍圈</span>
-          </button>
+          {/* 13. 🟢 5km 範圍圈 - 薄荷綠 */}
+          {setShowRadius && (
+            <button
+              onClick={() => setShowRadius(!showRadius)}
+              className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+                showRadius
+                  ? 'bg-emerald-950 border-emerald-500 text-emerald-300 shadow-md font-black'
+                  : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>🟢 5km 範圍圈</span>
+            </button>
+          )}
         </div>
       )}
     </div>
