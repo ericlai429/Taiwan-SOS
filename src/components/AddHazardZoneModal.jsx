@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Lock, X, CircleDot, Droplets } from 'lucide-react';
+import { Lock, X, CircleDot, Droplets } from 'lucide-react';
 import { encryptHazardZone } from '../services/crypto';
 import { saveCustomHazardZone } from '../services/storage';
 
@@ -24,7 +24,7 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
     }
 
     setIsSubmitting(true);
-    let color = '#c2b280'; // 卡其色代表停水無水可用
+    let color = '#c2b280';
     let typeName = '💧 停水停電區 (卡其色無水區)';
 
     if (type === 'road_blockade') {
@@ -58,137 +58,125 @@ export default function AddHazardZoneModal({ isOpen, onClose, userLocation, ciph
     setDescription('');
     onHazardAdded();
     onClose();
-    alert(`✅ 已成功圈出範圍圈 (${typeName} / 半徑 ${radiusMeters}m)！僅對齊暗碼之親友可正常解密檢視。`);
+    alert(`✅ 已成功圈出範圍圈 (${typeName} / 半徑 ${radiusMeters}m)！僅對齊暗碼之親友可解密檢視。`);
   };
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border-4 border-amber-500 rounded-3xl p-5 max-w-md w-full text-white shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-700 pb-3">
-          <div className="flex items-center gap-2 text-amber-400 font-extrabold text-senior-lg">
-            <CircleDot className="w-8 h-8 text-amber-400 animate-spin-slow" />
+    <div className="fixed inset-0 z-[2000] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 animate-fadeIn">
+      {/* 縮小 50% 的精簡災害圈 Modal 視窗 */}
+      <div className="bg-slate-900 border-2 border-amber-500 rounded-2xl p-3.5 max-w-sm w-full text-white shadow-2xl space-y-2.5">
+        <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+          <div className="flex items-center gap-1.5 text-amber-400 font-extrabold text-xs sm:text-sm">
+            <CircleDot className="w-4 h-4 text-amber-400 animate-spin-slow" />
             <span>新增彩色災害範圍圈</span>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800">
-            <X className="w-7 h-7" />
+          <button onClick={onClose} className="p-0.5 text-slate-400 hover:text-white rounded-full bg-slate-800 border border-slate-700">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="bg-amber-950/60 border border-amber-800/80 rounded-2xl p-3 flex items-start gap-3">
-          <Lock className="w-6 h-6 text-amber-400 shrink-0 mt-1" />
-          <div className="text-senior-sm text-amber-200">
-            此範圍圈將以暗碼 <strong className="text-amber-300">『{cipherCode || '未設定'}』</strong> 端到端加密，避免情報遭敵方或外人反偵查。
+        <div className="bg-amber-950/60 border border-amber-800/80 rounded-xl p-2 flex items-start gap-2 text-[10px] text-amber-200">
+          <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            以暗碼 <strong className="text-amber-300">『{cipherCode || '未設定'}』</strong> 端到端加密，避免情報遭外人反偵查。
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-2 text-xs">
           <div>
-            <label className="block text-senior-sm font-bold text-slate-200 mb-1">
-              災害與警戒區名稱 *
+            <label className="block font-bold text-slate-200 mb-1">
+              災害名稱 *
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="例如：中正區幹線斷水 / 停電區"
-              className="w-full bg-slate-800 border-2 border-slate-600 rounded-2xl p-3 text-senior-base text-white focus:border-amber-500 focus:outline-none"
+              placeholder="例如：中正區幹線斷水區"
+              className="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-xs text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="block text-senior-sm font-bold text-slate-200 mb-1">
-              選擇災害類型 (彩色標示)
+            <label className="block font-bold text-slate-200 mb-1">
+              災害類型 (彩色標示)
             </label>
-            <div className="space-y-2">
+            <div className="space-y-1 text-[11px]">
               <button
                 type="button"
                 onClick={() => setType('utility_outage')}
-                className={`w-full p-3 rounded-2xl font-bold text-senior-sm border-2 text-left flex items-center justify-between transition-all ${
+                className={`w-full p-2 rounded-xl font-bold border text-left flex items-center justify-between transition-all ${
                   type === 'utility_outage'
-                    ? 'bg-[#4a4228] border-[#c2b280] text-[#e8dfbe] shadow-md scale-[1.02]'
+                    ? 'bg-[#4a4228] border-[#c2b280] text-[#e8dfbe] shadow'
                     : 'bg-slate-800 border-slate-700 text-slate-300'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <Droplets className="w-5 h-5 text-[#c2b280]" />
-                  <span>💧 停水停電區 (卡其色 - 代表無水可用)</span>
+                <div className="flex items-center gap-1.5">
+                  <Droplets className="w-3.5 h-3.5 text-[#c2b280]" />
+                  <span>💧 停水區 (卡其色)</span>
                 </div>
-                <span className="w-4 h-4 rounded-full bg-[#c2b280]"></span>
+                <span className="w-3 h-3 rounded-full bg-[#c2b280]"></span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setType('road_blockade')}
-                className={`w-full p-3 rounded-2xl font-bold text-senior-sm border-2 text-left flex items-center justify-between transition-all ${
+                className={`w-full p-2 rounded-xl font-bold border text-left flex items-center justify-between transition-all ${
                   type === 'road_blockade'
-                    ? 'bg-orange-950 border-orange-500 text-orange-300 shadow-md scale-[1.02]'
+                    ? 'bg-orange-950 border-orange-500 text-orange-300 shadow'
                     : 'bg-slate-800 border-slate-700 text-slate-300'
                 }`}
               >
-                <span>🚧 禁止通行 / 封橋封路區 (橘色圈)</span>
-                <span className="w-4 h-4 rounded-full bg-orange-500"></span>
+                <span>🚧 封橋封路區 (橘色)</span>
+                <span className="w-3 h-3 rounded-full bg-orange-500"></span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setType('casualty_destruction')}
-                className={`w-full p-3 rounded-2xl font-bold text-senior-sm border-2 text-left flex items-center justify-between transition-all ${
+                className={`w-full p-2 rounded-xl font-bold border text-left flex items-center justify-between transition-all ${
                   type === 'casualty_destruction'
-                    ? 'bg-rose-950 border-rose-500 text-rose-300 shadow-md scale-[1.02]'
+                    ? 'bg-rose-950 border-rose-500 text-rose-300 shadow'
                     : 'bg-slate-800 border-slate-700 text-slate-300'
                 }`}
               >
-                <span>💥 傷亡與建物嚴重破壞區 (深紅色圈)</span>
-                <span className="w-4 h-4 rounded-full bg-rose-600"></span>
+                <span>💥 傷亡破壞區 (深紅)</span>
+                <span className="w-3 h-3 rounded-full bg-rose-600"></span>
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-senior-sm font-bold text-slate-200 mb-1">
-              災害圈影響半徑範圍 (公尺)
+            <label className="block font-bold text-slate-200 mb-1">
+              警戒半徑 (公尺)
             </label>
             <select
               value={radiusMeters}
               onChange={(e) => setRadiusMeters(e.target.value)}
-              className="w-full bg-slate-800 border-2 border-slate-600 rounded-2xl p-3 text-senior-lg font-bold text-amber-300 focus:border-amber-500 focus:outline-none"
+              className="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-xs font-bold text-amber-300 focus:border-amber-500 focus:outline-none"
             >
-              <option value={300}>300 公尺 (小區域 / 巷道管制)</option>
-              <option value={500}>500 公尺 (中等區域 / 街區警戒)</option>
-              <option value={1000}>1000 公尺 (1公里 / 大範圍管制)</option>
-              <option value={2000}>2000 公尺 (2公里 / 重大災害區)</option>
+              <option value={300}>300m (小區域 / 巷道)</option>
+              <option value={500}>500m (中等 / 街區警戒)</option>
+              <option value={1000}>1000m (1km / 大範圍)</option>
+              <option value={2000}>2000m (2km / 重大災害)</option>
             </select>
           </div>
 
-          <div>
-            <label className="block text-senior-sm font-bold text-slate-200 mb-1">
-              詳細說明與避開建議 (選填)
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="例如：自來水幹管斷裂無水可用；附近水車位於公園旁..."
-              rows={2}
-              className="w-full bg-slate-800 border-2 border-slate-600 rounded-2xl p-3 text-senior-base text-white focus:border-amber-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="pt-2 flex gap-3">
+          <div className="pt-1 flex gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-slate-800 hover:bg-slate-700 py-3 rounded-2xl font-bold text-senior-base text-slate-300"
+              className="flex-1 bg-slate-800 hover:bg-slate-700 py-1.5 rounded-xl font-bold text-xs text-slate-300"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-amber-600 hover:bg-amber-500 py-3 rounded-2xl font-black text-senior-base text-slate-950 shadow-lg flex items-center justify-center gap-2 active:scale-95"
+              className="flex-1 bg-amber-600 hover:bg-amber-500 py-1.5 rounded-xl font-bold text-xs text-slate-950 shadow flex items-center justify-center gap-1 active:scale-95"
             >
-              <Lock className="w-5 h-5" />
-              <span>加密生成卡其/彩色圈</span>
+              <Lock className="w-3.5 h-3.5" />
+              <span>加密生成範圍圈</span>
             </button>
           </div>
         </form>

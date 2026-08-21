@@ -38,47 +38,48 @@ export default function SurvivalChecklistModal({ isOpen, onClose }) {
   const checkedCount = items.filter(i => i.checked).length;
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border-4 border-emerald-500 rounded-3xl p-5 max-w-lg w-full text-white shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-700 pb-3">
-          <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-senior-lg">
-            <ShoppingBag className="w-8 h-8 text-emerald-400" />
+    <div className="fixed inset-0 z-[2000] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 animate-fadeIn">
+      {/* 縮小 50% 的精簡避難包 Modal 視窗 */}
+      <div className="bg-slate-900 border-2 border-emerald-500 rounded-2xl p-3.5 max-w-sm w-full text-white shadow-2xl space-y-2.5">
+        <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+          <div className="flex items-center gap-1.5 text-emerald-400 font-extrabold text-xs sm:text-sm">
+            <ShoppingBag className="w-4 h-4 text-emerald-400" />
             <span>家庭緊急避難包準備清單</span>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800">
-            <X className="w-7 h-7" />
+          <button onClick={onClose} className="p-0.5 text-slate-400 hover:text-white rounded-full bg-slate-800 border border-slate-700">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex items-center justify-between bg-slate-800 p-3 rounded-2xl border border-slate-700">
-          <span className="text-senior-base font-bold text-slate-200">
+        <div className="flex items-center justify-between bg-slate-800 p-2 rounded-xl border border-slate-700">
+          <span className="text-xs font-bold text-slate-200">
             整備完成度：<strong className="text-emerald-300">{checkedCount} / {items.length} 項</strong>
           </span>
           <button
             onClick={resetAll}
-            className="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-700"
+            className="text-[10px] text-slate-400 hover:text-white flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-lg border border-slate-700"
           >
-            <RefreshCw className="w-3.5 h-3.5" /> 重置清單
+            <RefreshCw className="w-3 h-3" /> 重置清單
           </button>
         </div>
 
-        <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+        <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
           {items.map(item => (
             <div
               key={item.id}
               onClick={() => toggleCheck(item.id)}
-              className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3 ${
+              className={`p-2 rounded-xl border cursor-pointer transition-all flex items-start gap-2 text-xs ${
                 item.checked
                   ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200'
                   : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-500'
               }`}
             >
               {item.checked ? (
-                <CheckSquare className="w-7 h-7 text-emerald-400 shrink-0 mt-0.5" />
+                <CheckSquare className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               ) : (
-                <Square className="w-7 h-7 text-slate-500 shrink-0 mt-0.5" />
+                <Square className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
               )}
-              <span className={`text-senior-base font-extrabold leading-snug ${item.checked ? 'line-through opacity-80' : ''}`}>
+              <span className={`font-semibold leading-tight ${item.checked ? 'line-through opacity-80' : ''}`}>
                 {item.text}
               </span>
             </div>
@@ -87,7 +88,7 @@ export default function SurvivalChecklistModal({ isOpen, onClose }) {
 
         <button
           onClick={onClose}
-          className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-senior-base rounded-2xl shadow-lg active:scale-95"
+          className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md active:scale-95"
         >
           完成對照關閉
         </button>
