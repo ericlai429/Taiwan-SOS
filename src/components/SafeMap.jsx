@@ -925,19 +925,19 @@ export default function SafeMap({
         );
 
         if (isUnlocked) {
-          marker.on('dragend', (e) => {
+          marker.on('dragend', async (e) => {
             const newPos = e.target.getLatLng();
             const newLat = Number(newPos.lat.toFixed(4));
             const newLng = Number(newPos.lng.toFixed(4));
 
             const isConfirmed = window.confirm(
-              `📍【確認重新定位地區災害旗標】\n\n您確定要將【${flag.title}】移動至新座標：\n緯度：${newLat}\n經度：${newLng} 嗎？`
+              `📍【確認重新定位地區災害旗標】\n\n您確定要將【${flag.title}】移動至新座標：\n緯度：${newLat}\n經度：${newLng} 嗎？\n\n（系統將以暗碼『${cipherCode || '未設定'}』重新進行 AES-GCM 端到端加密保護）`
             );
 
             if (isConfirmed) {
-              updateDangerFlagLocation(flag.id, newLat, newLng);
-              loadAndDecryptData();
-              alert(`✅ 已成功將【${flag.title}】更新至新座標 (${newLat}, ${newLng})！`);
+              await updateDangerFlagLocation(flag.id, newLat, newLng, cipherCode);
+              await loadAndDecryptData();
+              alert(`✅ 已成功將【${flag.title}】更新至新座標 (${newLat}, ${newLng}) 並重新加密！`);
             } else {
               // 恢復原座標
               marker.setLatLng([flag.lat, flag.lng]);
@@ -1004,6 +1004,7 @@ export default function SafeMap({
     showHighRisk,
     showDangerFlags,
     decryptedFlags,
+    cipherCode,
     btnLevel,
     startNavigation
   ]);

@@ -70,6 +70,8 @@ export function getStoredDangerFlags() {
   }
 }
 
+import { decryptDangerFlag, encryptDangerFlag } from './crypto';
+
 export function saveDangerFlag(flagEncryptedObj) {
   const flags = getStoredDangerFlags();
   flags.push(flagEncryptedObj);
@@ -77,15 +79,28 @@ export function saveDangerFlag(flagEncryptedObj) {
   return flags;
 }
 
-export function updateDangerFlagLocation(flagId, newLat, newLng) {
+export async function updateDangerFlagLocation(flagId, newLat, newLng, cipherCode) {
   try {
     const flags = getStoredDangerFlags();
-    const updated = flags.map(f => {
+    const updated = [];
+    for (const f of flags) {
       if (f.id === flagId) {
-        return { ...f, lat: newLat, lng: newLng };
+        if (f.isEncrypted && cipherCode) {
+          // 解密舊內容、更新座標、重新以 AES-GCM 加密
+          const dec = await decryptDangerFlag(f, cipherCode);
+          if (dec) {
+            dec.lat = newLat;
+            dec.lng = newLng;
+            const reEnc = await encryptDangerFlag(dec, cipherCode);
+            updated.push(reEnc);
+            continue;
+          }
+        }
+        updated.push({ ...f, lat: newLat, lng: newLng });
+      } else {
+        updated.push(f);
       }
-      return f;
-    });
+    }
     localStorage.setItem(KEYS.DANGER_FLAGS, JSON.stringify(updated));
     return updated;
   } catch (e) {

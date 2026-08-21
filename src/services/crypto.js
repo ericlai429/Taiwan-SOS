@@ -97,6 +97,8 @@ export async function encryptDangerFlag(flagData, passcode) {
   return {
     id: flagData.id || ('flag-' + Date.now()),
     isEncrypted: true,
+    lat: flagData.lat,
+    lng: flagData.lng,
     payload: encryptedPayload,
     createdAt: flagData.createdAt || new Date().toISOString()
   };
@@ -109,7 +111,13 @@ export async function decryptDangerFlag(encryptedFlag, passcode) {
     return null;
   }
   try {
-    return JSON.parse(decryptedJson);
+    const parsed = JSON.parse(decryptedJson);
+    // 確保解密後包含座標
+    return {
+      ...parsed,
+      lat: parsed.lat || encryptedFlag.lat,
+      lng: parsed.lng || encryptedFlag.lng
+    };
   } catch (e) {
     return null;
   }
@@ -122,6 +130,10 @@ export async function encryptHazardZone(zoneData, passcode) {
   return {
     id: zoneData.id || ('hazard-custom-' + Date.now()),
     isEncrypted: true,
+    lat: zoneData.lat,
+    lng: zoneData.lng,
+    radiusMeters: zoneData.radiusMeters,
+    color: zoneData.color,
     payload: encryptedPayload,
     createdAt: zoneData.createdAt || new Date().toISOString()
   };
@@ -134,7 +146,14 @@ export async function decryptHazardZone(encryptedZone, passcode) {
     return null;
   }
   try {
-    return JSON.parse(decryptedJson);
+    const parsed = JSON.parse(decryptedJson);
+    return {
+      ...parsed,
+      lat: parsed.lat || encryptedZone.lat,
+      lng: parsed.lng || encryptedZone.lng,
+      radiusMeters: parsed.radiusMeters || encryptedZone.radiusMeters,
+      color: parsed.color || encryptedZone.color
+    };
   } catch (e) {
     return null;
   }
