@@ -81,13 +81,13 @@ export default function App() {
             )}
           </div>
 
-          {/* 右側工具列 (極致響應自適應，不擠出螢幕) */}
-          <div className="flex items-center gap-1 shrink-0 overflow-x-auto no-scrollbar max-w-[65%] sm:max-w-none">
+          {/* 右側工具列 (極致響應自適應，不擠出螢幕，防抖動 overflow-visible) */}
+          <div className="flex items-center gap-1 shrink-0 overflow-visible max-w-[65%] sm:max-w-none">
             {/* ⚙️ 5 級距按鈕切換鈕 */}
             <Tooltip text={`按鈕尺寸：當前【${currentLevelConfig.label}】(點擊切換)`} position="bottom">
               <button
                 onClick={cycleBtnLevel}
-                className="h-[34px] px-2 bg-purple-700 hover:bg-purple-600 border border-purple-400 text-white rounded-xl text-xs font-black flex items-center justify-center shrink-0 active:scale-95 transition-all"
+                className="h-[34px] px-2 min-w-[34px] bg-purple-700 hover:bg-purple-600 border border-purple-400 text-white rounded-xl text-xs font-black flex items-center justify-center shrink-0 active:scale-95 transition-all"
               >
                 <Sliders className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                 <span className="hidden md:inline ml-1 whitespace-nowrap">{currentLevelConfig.px}px</span>
