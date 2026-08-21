@@ -28,9 +28,10 @@ import InvasionPlaybackBar from './InvasionPlaybackBar';
 import CountySelector from './CountySelector';
 import DanmakuOverlay from './DanmakuOverlay';
 import DanmakuInputBar from './DanmakuInputBar';
+import Tooltip from './Tooltip';
 import invasionHistoryData from '../data/invasion_history.json';
 
-export default function SafeMap({ cipherCode, onSelectDestination }) {
+export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
@@ -627,48 +628,68 @@ export default function SafeMap({ cipherCode, onSelectDestination }) {
         </div>
       )}
 
-      {/* 側邊按鈕控制列 (移至右側防止手機排版重疊) */}
+      {/* 側邊按鈕控制列 (支援 25px 極小模式與浮窗提示) */}
       <div className={`absolute bottom-16 z-[990] flex flex-col gap-1.5 transition-all ${
         isLandscape && isMobile ? 'left-16' : 'right-3'
       }`}>
-        <button
-          onClick={recenterMap}
-          className="p-2.5 bg-slate-900/95 border border-emerald-500 hover:bg-slate-800 text-emerald-400 rounded-2xl shadow-xl flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
-          title="定位至我的位置"
-        >
-          <Navigation className="w-5 h-5 animate-pulse text-emerald-400 shrink-0" />
-          <span className="text-xs font-black text-white hidden sm:inline">我的位置</span>
-        </button>
+        <Tooltip text="我的位置：重新定位至 GPS 動態座標" position="left">
+          <button
+            onClick={recenterMap}
+            className={`bg-slate-900/95 border border-emerald-500 hover:bg-slate-800 text-emerald-400 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
+              isMicro25
+                ? 'w-[25px] h-[25px] p-0 rounded-lg'
+                : 'p-2 rounded-2xl gap-1.5'
+            }`}
+          >
+            <Navigation className={`animate-pulse text-emerald-400 shrink-0 ${isMicro25 ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
+            {!isMicro25 && <span className="text-xs text-white hidden sm:inline">我的位置</span>}
+          </button>
+        </Tooltip>
 
         {/* 新增彩色災害圈 */}
-        <button
-          onClick={() => setIsAddHazardOpen(true)}
-          className="p-2 bg-amber-950/95 border border-amber-500 hover:bg-amber-900 text-amber-300 rounded-2xl shadow-xl flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
-          title="新增彩色圈"
-        >
-          <CircleDot className="w-5 h-5 text-amber-400 animate-spin-slow shrink-0" />
-          <span className="text-xs font-black text-white hidden sm:inline">新增彩色圈</span>
-        </button>
+        <Tooltip text="新增彩色圈：劃定停水(卡其)/封路(橘)/傷亡(紅)區域" position="left">
+          <button
+            onClick={() => setIsAddHazardOpen(true)}
+            className={`bg-amber-950/95 border border-amber-500 hover:bg-amber-900 text-amber-300 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
+              isMicro25
+                ? 'w-[25px] h-[25px] p-0 rounded-lg'
+                : 'p-2 rounded-2xl gap-1.5'
+            }`}
+          >
+            <CircleDot className={`text-amber-400 animate-spin-slow shrink-0 ${isMicro25 ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
+            {!isMicro25 && <span className="text-xs text-white hidden sm:inline">新增彩色圈</span>}
+          </button>
+        </Tooltip>
 
         {/* 標記危險地區 (旗標) */}
-        <button
-          onClick={() => setIsAddFlagOpen(true)}
-          className="p-2 bg-rose-950/95 border border-rose-500 hover:bg-rose-900 text-rose-300 rounded-2xl shadow-xl flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
-          title="標記危險區"
-        >
-          <Flag className="w-5 h-5 text-rose-400 fill-rose-500 shrink-0" />
-          <span className="text-xs font-black text-white hidden sm:inline">標記危險區</span>
-        </button>
+        <Tooltip text="標記危險區：放置 AES-GCM 暗碼加密危險旗標" position="left">
+          <button
+            onClick={() => setIsAddFlagOpen(true)}
+            className={`bg-rose-950/95 border border-rose-500 hover:bg-rose-900 text-rose-300 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
+              isMicro25
+                ? 'w-[25px] h-[25px] p-0 rounded-lg'
+                : 'p-2 rounded-2xl gap-1.5'
+            }`}
+          >
+            <Flag className={`text-rose-400 fill-rose-500 shrink-0 ${isMicro25 ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
+            {!isMicro25 && <span className="text-xs text-white hidden sm:inline">標記危險區</span>}
+          </button>
+        </Tooltip>
 
         {/* 每日情報紀錄 */}
-        <button
-          onClick={() => setIsDailyIntelOpen(true)}
-          className="p-2 bg-slate-900/95 border border-slate-600 hover:bg-slate-800 text-slate-300 rounded-2xl shadow-xl flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
-          title="每日情報"
-        >
-          <Calendar className="w-5 h-5 text-slate-300 shrink-0" />
-          <span className="text-xs font-black text-white hidden sm:inline">每日情報</span>
-        </button>
+        <Tooltip text="每日情報：日期檢視每日地圖狀況日誌" position="left">
+          <button
+            onClick={() => setIsDailyIntelOpen(true)}
+            className={`bg-slate-900/95 border border-slate-600 hover:bg-slate-800 text-slate-300 font-black shadow-xl flex items-center justify-center active:scale-95 backdrop-blur-md transition-all ${
+              isMicro25
+                ? 'w-[25px] h-[25px] p-0 rounded-lg'
+                : 'p-2 rounded-2xl gap-1.5'
+            }`}
+          >
+            <Calendar className={`text-slate-300 shrink-0 ${isMicro25 ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
+            {!isMicro25 && <span className="text-xs text-white hidden sm:inline">每日情報</span>}
+          </button>
+        </Tooltip>
       </div>
 
       {/* Modal 彈窗元件 */}

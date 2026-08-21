@@ -7,13 +7,19 @@ import HeartbeatSOS from './components/HeartbeatSOS';
 import SOSFlashlightModal from './components/SOSFlashlightModal';
 import SirenAudioModal from './components/SirenAudioModal';
 import SurvivalChecklistModal from './components/SurvivalChecklistModal';
+import Tooltip from './components/Tooltip';
 import { getStoredCipherCode, clearAllCacheAndStorage } from './services/storage';
-import { Shield, Phone, Lock, Calendar, Zap, Radio, ShoppingBag, RotateCcw } from 'lucide-react';
+import { Shield, Phone, Lock, Calendar, Zap, Radio, ShoppingBag, RotateCcw, Sliders } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('map');
   const [cipherCode, setCipherCode] = useState('');
   const [selectedTarget, setSelectedTarget] = useState(null);
+
+  // 25px 極小按鈕模式設定狀態
+  const [isMicro25, setIsMicro25] = useState(() => {
+    return localStorage.getItem('taiwan_sos_micro25') === 'true';
+  });
 
   // 緊急民防工具 Modal 狀態
   const [isFlashlightOpen, setIsFlashlightOpen] = useState(false);
@@ -24,6 +30,12 @@ export default function App() {
     const saved = getStoredCipherCode();
     if (saved) setCipherCode(saved);
   }, []);
+
+  const toggleMicro25 = () => {
+    const next = !isMicro25;
+    setIsMicro25(next);
+    localStorage.setItem('taiwan_sos_micro25', String(next));
+  };
 
   const handleSelectDestination = (target) => {
     setSelectedTarget(target);
@@ -46,12 +58,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none pb-20">
-      {/* 頂部長輩高對比標頭 (單行防折疊與防止直向排版錯亂) */}
-      <header className="bg-slate-900 border-b border-slate-800 px-3 py-2 sticky top-0 z-50 shadow-md backdrop-blur-md bg-slate-900/95">
+      {/* 頂部長輩高對比標頭 (支援 25px 極小按鈕組態) */}
+      <header className="bg-slate-900 border-b border-slate-800 px-2 py-1.5 sticky top-0 z-50 shadow-md backdrop-blur-md bg-slate-900/95">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-1.5 h-10">
-          {/* 左側標題：極致單行，嚴禁直向折字 */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="p-1.5 bg-emerald-600 rounded-xl shadow-md shrink-0">
+          {/* 左側標題 */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="p-1 bg-emerald-600 rounded-xl shadow-md shrink-0">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-base sm:text-senior-lg font-black tracking-wide text-white whitespace-nowrap shrink-0">
@@ -64,46 +76,92 @@ export default function App() {
             )}
           </div>
 
-          {/* 右側工具列：精簡圖示按鈕，防止擠壓左側標題 */}
+          {/* 右側工具列 (支援 25px 極小模式與浮窗提示) */}
           <div className="flex items-center gap-1 shrink-0">
-            <button
-              onClick={handleResetData}
-              className="p-1.5 bg-slate-800 hover:bg-rose-950 text-slate-300 rounded-xl border border-slate-700 text-xs font-bold active:scale-95 transition-all"
-              title="重置暫存"
-            >
-              <RotateCcw className="w-4 h-4 text-slate-400" />
-            </button>
+            {/* ⚙️ 25px 極小按鈕組態切換 */}
+            <Tooltip text={isMicro25 ? '切換為標準按鈕尺寸' : '切換為 25px 極小按鈕模式 (浮窗提示)'} position="bottom">
+              <button
+                onClick={toggleMicro25}
+                className={`transition-all font-black flex items-center justify-center border active:scale-95 ${
+                  isMicro25
+                    ? 'w-[25px] h-[25px] p-0 bg-purple-600 border-white text-white rounded-lg'
+                    : 'p-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 border-purple-500 rounded-xl text-xs'
+                }`}
+              >
+                <Sliders className={isMicro25 ? 'w-3.5 h-3.5 text-white' : 'w-4 h-4 text-purple-400'} />
+              </button>
+            </Tooltip>
 
-            <button
-              onClick={() => setIsFlashlightOpen(true)}
-              className="p-1.5 bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-xl border border-amber-600 text-xs font-bold active:scale-95"
-              title="手電筒"
-            >
-              <Zap className="w-4 h-4 text-amber-400" />
-            </button>
+            {/* 🔄 重置暫存 */}
+            <Tooltip text="重置暫存：清空舊資料與離線快取" position="bottom">
+              <button
+                onClick={handleResetData}
+                className={`transition-all font-bold flex items-center justify-center border active:scale-95 ${
+                  isMicro25
+                    ? 'w-[25px] h-[25px] p-0 bg-slate-800 border-slate-600 text-slate-300 rounded-lg'
+                    : 'p-1.5 bg-slate-800 hover:bg-rose-950 text-slate-300 rounded-xl border border-slate-700 text-xs'
+                }`}
+              >
+                <RotateCcw className={isMicro25 ? 'w-3.5 h-3.5 text-slate-300' : 'w-4 h-4 text-slate-400'} />
+              </button>
+            </Tooltip>
 
-            <button
-              onClick={() => setIsSirenOpen(true)}
-              className="p-1.5 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 rounded-xl border border-cyan-600 text-xs font-bold active:scale-95"
-              title="警報試聽"
-            >
-              <Radio className="w-4 h-4 text-cyan-400" />
-            </button>
+            {/* 🔦 手電筒 */}
+            <Tooltip text="手電筒：極致白光與 SOS 爆閃燈" position="bottom">
+              <button
+                onClick={() => setIsFlashlightOpen(true)}
+                className={`transition-all font-bold flex items-center justify-center border active:scale-95 ${
+                  isMicro25
+                    ? 'w-[25px] h-[25px] p-0 bg-amber-950 border-amber-500 text-amber-400 rounded-lg'
+                    : 'p-1.5 bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-xl border border-amber-600 text-xs'
+                }`}
+              >
+                <Zap className={isMicro25 ? 'w-3.5 h-3.5 text-amber-400' : 'w-4 h-4 text-amber-400'} />
+              </button>
+            </Tooltip>
 
-            <button
-              onClick={() => setIsChecklistOpen(true)}
-              className="p-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 rounded-xl border border-emerald-600 text-xs font-bold active:scale-95"
-              title="避難包"
-            >
-              <ShoppingBag className="w-4 h-4 text-emerald-400" />
-            </button>
+            {/* 📻 警報試聽 */}
+            <Tooltip text="警報試聽：防空警報聽力導引與音效" position="bottom">
+              <button
+                onClick={() => setIsSirenOpen(true)}
+                className={`transition-all font-bold flex items-center justify-center border active:scale-95 ${
+                  isMicro25
+                    ? 'w-[25px] h-[25px] p-0 bg-cyan-950 border-cyan-500 text-cyan-400 rounded-lg'
+                    : 'p-1.5 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 rounded-xl border border-cyan-600 text-xs'
+                }`}
+              >
+                <Radio className={isMicro25 ? 'w-3.5 h-3.5 text-cyan-400' : 'w-4 h-4 text-cyan-400'} />
+              </button>
+            </Tooltip>
 
-            <a
-              href="tel:119"
-              className="bg-rose-600 hover:bg-rose-500 text-white px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1 shadow active:scale-95 border border-rose-400 whitespace-nowrap ml-1"
-            >
-              <Phone className="w-3.5 h-3.5" /> 119
-            </a>
+            {/* 🎒 避難包 */}
+            <Tooltip text="避難包：家庭避難備糧勾選清單" position="bottom">
+              <button
+                onClick={() => setIsChecklistOpen(true)}
+                className={`transition-all font-bold flex items-center justify-center border active:scale-95 ${
+                  isMicro25
+                    ? 'w-[25px] h-[25px] p-0 bg-emerald-950 border-emerald-500 text-emerald-400 rounded-lg'
+                    : 'p-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 rounded-xl border border-emerald-600 text-xs'
+                }`}
+              >
+                <ShoppingBag className={isMicro25 ? 'w-3.5 h-3.5 text-emerald-400' : 'w-4 h-4 text-emerald-400'} />
+              </button>
+            </Tooltip>
+
+            {/* 📞 119 */}
+            <Tooltip text="119 直撥：消防與急護報案電話" position="bottom">
+              <a
+                href="tel:119"
+                className={`bg-rose-600 hover:bg-rose-500 text-white font-black flex items-center justify-center shadow active:scale-95 border border-rose-400 whitespace-nowrap transition-all ${
+                  isMicro25
+                    ? 'w-[25px] h-[25px] p-0 rounded-lg text-[10px]'
+                    : 'px-2 py-1 rounded-xl text-xs ml-1'
+                }`}
+              >
+                <Phone className="w-3.5 h-3.5" />
+                {!isMicro25 && <span className="ml-1">119</span>}
+              </a>
+            </Tooltip>
           </div>
         </div>
       </header>
@@ -114,6 +172,8 @@ export default function App() {
           <SafeMap
             cipherCode={cipherCode}
             onSelectDestination={handleSelectDestination}
+            isMicro25={isMicro25}
+            toggleMicro25={toggleMicro25}
           />
         )}
 
