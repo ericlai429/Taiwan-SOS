@@ -2,12 +2,29 @@
 <html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>台灣急難通 (Taiwan SOS) - 雙北桃園安全避難與動態導航</title>
     <meta name="theme-color" content="#16a34a" />
     <meta name="description" content="台灣急難通 (Taiwan SOS) - 雙北與桃園地區專用之長輩友善安全避難、防空設施、物資醫療點位與暗碼加密防駭群組通訊 PWA 系統" />
+    
+    <!-- 🍎 專用 iOS Apple PWA 標籤 (解決 iOS 加入主畫面開啟 404 Bug) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="台灣急難通" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="./icons/icon-192.png" />
+
     <link rel="manifest" href="./manifest.json" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script>
+      // 📌 修正 iOS Safari PWA 404 Bug：若 URL 缺少結尾斜線 /Taiwan-SOS，自動補充斜線以確保 iOS WebClip 正確解析
+      if (window.location.pathname === '/Taiwan-SOS') {
+        window.history.replaceState(null, '', '/Taiwan-SOS/');
+      }
+    </script>
   </head>
   <body class="bg-slate-950 text-slate-100 min-h-screen antialiased select-none">
     <div id="root"></div>
