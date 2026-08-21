@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff, ShieldCheck, Activity, Radio } from 'lucide-react';
 import { encryptMessage, decryptMessage } from '../services/crypto';
 import { getStoredCipherCode, setStoredCipherCode, getStoredMessages, saveMessage, appendDayTimeLog } from '../services/storage';
-import { sanitizeHTML, checkCipherStrength } from '../utils/security';
+import { sanitizeHTML, checkCipherStrength, sanitizeCipherCode, validateCipherCode } from '../utils/security';
 import { networkSync } from '../services/networkSync';
 
 export default function CipherChat({ cipherCode, setCipherCode }) {
@@ -149,18 +149,27 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     e.preventDefault();
     const trimmed = inputCode.trim();
     if (!trimmed) {
-      alert('⚠️ 請輸入暗碼或頻道號碼（如 CH-01、FAMILY888）');
+      alert('⚠️ 請輸入暗碼或頻道號碼（支援英數混合，如: FAMILY888、SOS2026、CH-01）');
       return;
     }
-    setCipherCode(trimmed);
-    setStoredCipherCode(trimmed);
+    const valRes = validateCipherCode(trimmed);
+    if (!valRes.isValid) {
+      alert(valRes.message);
+      const clean = sanitizeCipherCode(trimmed);
+      setInputCode(clean);
+      if (!clean) return;
+    }
+    const cleanCode = sanitizeCipherCode(trimmed);
+    setCipherCode(cleanCode);
+    setStoredCipherCode(cleanCode);
   };
 
   // 快速切換公共頻道
   const switchChannel = (ch) => {
-    setInputCode(ch);
-    setCipherCode(ch);
-    setStoredCipherCode(ch);
+    const clean = sanitizeCipherCode(ch);
+    setInputCode(clean);
+    setCipherCode(clean);
+    setStoredCipherCode(clean);
   };
 
   // 發送加密訊息 (雙重防護 XSS 與端到端 AES-GCM 256-bit 加密)
@@ -290,9 +299,10 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
           <div className="flex gap-2 pt-1">
             <input
               type="text"
+              maxLength={50}
               value={inputCode}
-              onChange={(e) => setInputCode(e.target.value)}
-              placeholder="請輸入親友約定暗碼或頻道 (如: CH-01 / FAMILY888)"
+              onChange={(e) => setInputCode(e.target.value.replace(/[^a-zA-Z0-9\-_]/g, ''))}
+              placeholder="支援英數混合 (如: FAMILY888 / SOS2026 / CH-01)"
               className="flex-1 min-w-0 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-[15px] font-bold text-amber-300 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
             />
             <button
