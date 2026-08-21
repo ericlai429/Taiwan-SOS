@@ -821,6 +821,10 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
         />
 
         <HazardLegendCard
+          showShelters={showShelters} setShowShelters={setShowShelters}
+          showMedical={showMedical} setShowMedical={setShowMedical}
+          showSupplies={showSupplies} setShowSupplies={setShowSupplies}
+          showFacilities={showFacilities} setShowFacilities={setShowFacilities}
           showUtility={showUtility} setShowUtility={setShowUtility}
           showBlockade={showBlockade} setShowBlockade={setShowBlockade}
           showCasualty={showCasualty} setShowCasualty={setShowCasualty}
