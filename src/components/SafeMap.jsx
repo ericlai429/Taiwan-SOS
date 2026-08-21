@@ -152,14 +152,17 @@ export default function SafeMap({
 
   const [navTarget, setNavTarget] = useState(null);
 
-  // 切換全台 22 縣市跳轉 (僅平移視野，絕不竄改使用者真實 GPS 座標)
+  // 切換全台 22 縣市跳轉 (同步為電腦版驗收與周邊資源計算之中心位置)
   const handleSelectCounty = useCallback((county) => {
     setSelectedCountyId(county.id);
     const map = mapInstanceRef.current;
     if (map) {
       map.flyTo([county.lat, county.lng], 13, { animate: true });
     }
-  }, []);
+    const loc = { lat: county.lat, lng: county.lng, isManual: true };
+    setUserLocation(loc);
+    localStorage.setItem('taiwan_sos_user_location', JSON.stringify(loc));
+  }, [setUserLocation]);
 
   // 🌏 切換 5 大區域視野 (全區 ➔ 北區 ➔ 中區 ➔ 南區 ➔ 東區 輪播)
   const handleSelectRegion = useCallback((region) => {
@@ -317,6 +320,18 @@ export default function SafeMap({
     layersRef.current.coastalGroup = L.layerGroup().addTo(map);
     layersRef.current.invasionGroup = L.layerGroup().addTo(map);
     layersRef.current.osintGroup = L.layerGroup().addTo(map);
+
+    // 📌 電腦版驗收輔助：支援滑鼠右鍵點擊地圖自訂當前所在位置
+    map.on('contextmenu', (e) => {
+      const { lat, lng } = e.latlng;
+      const customLoc = { lat: Number(lat.toFixed(4)), lng: Number(lng.toFixed(4)), isManual: true };
+      setUserLocation(customLoc);
+      localStorage.setItem('taiwan_sos_user_location', JSON.stringify(customLoc));
+      L.popup({ autoClose: true })
+        .setLatLng(e.latlng)
+        .setContent(`<div style="padding:4px; font-weight:bold; color:#10b981; font-family:sans-serif;">📍 已將此處設為您的目前位置！<br/><span style="font-size:11px; color:#94a3b8;">(座標: ${lat.toFixed(4)}, ${lng.toFixed(4)})</span></div>`)
+        .openOn(map);
+    });
 
     mapInstanceRef.current = map;
 

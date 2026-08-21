@@ -24,7 +24,14 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('map');
   const [cipherCode, setCipherCode] = useState('');
   const [selectedTarget, setSelectedTarget] = useState(null);
-  const [userLocation, setUserLocation] = useState({ lat: 25.0645, lng: 121.6570 });
+  const [userLocation, setUserLocation] = useState(() => {
+    try {
+      const saved = localStorage.getItem('taiwan_sos_user_location');
+      return saved ? JSON.parse(saved) : { lat: 25.0645, lng: 121.6570 };
+    } catch {
+      return { lat: 25.0645, lng: 121.6570 };
+    }
+  });
 
   // 5 個按鈕尺寸級距 (1: 25px, 2: 33px, 3: 42px, 4: 50px, 5: 60px)
   const [btnLevel, setBtnLevel] = useState(() => {
@@ -41,14 +48,23 @@ export default function App() {
     const saved = getStoredCipherCode();
     if (saved) setCipherCode(saved);
 
-    // 全域自動獲取一次真實 GPS 座標 (強制 maximumAge: 0 與高精準度，避免回傳板橋/機房舊快取)
+    // 全域自動獲取一次真實 GPS 座標 (過濾桌機粗略 IP 機房定位)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          setUserLocation({
+          const accuracy = pos.coords.accuracy || 0;
+          // 若誤差大於 3000 公尺代表為桌機/筆電 ISP 機房 IP (如台中/板橋機房)，若有自訂/預設位置則不被覆蓋
+          if (accuracy > 3000) {
+            console.warn(`[GPS] 偵測到桌機/筆電粗略 IP 定位 (誤差 ${Math.round(accuracy)}m)，保留雙北/自訂位置。`);
+            return;
+          }
+          const realLoc = {
             lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-          });
+            lng: pos.coords.longitude,
+            accuracy
+          };
+          setUserLocation(realLoc);
+          localStorage.setItem('taiwan_sos_user_location', JSON.stringify(realLoc));
         },
         (err) => console.warn('初始 GPS 定位提示:', err),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
