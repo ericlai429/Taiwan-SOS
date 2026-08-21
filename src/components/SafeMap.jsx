@@ -619,17 +619,17 @@ export default function SafeMap({ cipherCode, onSelectDestination, isMicro25 }) 
         />
       </div>
 
-      {/* 📢 底部即時彈幕廣播發話列 (含 30 秒冷卻倒數) */}
+      {/* 📢 底部即時彈幕廣播發話列 (寬敞大字體輸入) */}
       <div className={`absolute bottom-3 z-[990] transition-all ${
-        isLandscape && isMobile ? 'left-40 right-28' : 'left-3 right-16 sm:left-36 max-w-md'
+        isLandscape && isMobile ? 'left-40 right-3' : 'left-3 right-3 sm:left-36 max-w-xl'
       }`}>
         <DanmakuInputBar onSendDanmaku={handleSendDanmaku} />
       </div>
 
       {/* 底部敵佔領與快艇推進 30 分鐘時間軸拖拉回放控制器 (InvasionPlaybackBar) */}
       {showInvasion && (
-        <div className={`absolute bottom-14 z-[990] transition-all ${
-          isLandscape && isMobile ? 'left-40 right-28' : 'left-3 right-16 sm:left-36 max-w-md'
+        <div className={`absolute bottom-16 z-[990] transition-all ${
+          isLandscape && isMobile ? 'left-40 right-3' : 'left-3 right-3 sm:left-36 max-w-xl'
         }`}>
           <InvasionPlaybackBar
             currentStepIndex={currentInvasionStep}
