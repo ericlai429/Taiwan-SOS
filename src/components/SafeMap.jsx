@@ -85,21 +85,93 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
   // 入侵時間軸步數狀態 (30分鐘為單位)
   const [currentInvasionStep, setCurrentInvasionStep] = useState(0);
 
-  // 📢 彈幕廣播列表狀態
-  const [danmakuList, setDanmakuList] = useState([
-    { id: 'dm-1', text: '捷運台北車站地下 B3 層正常開放防空避難', sender: '防空民防組', topPercent: 18, speedSeconds: 15 },
-    { id: 'dm-2', text: '停水區域請前往各里活動中心領取備用自來水包', sender: '水務後勤組', topPercent: 28, speedSeconds: 17 }
-  ]);
+  // 📢 彈幕廣播列表狀態 (包含前一小時 Log 載入與時間戳記)
+  const getInitialDanmakuLogs = () => {
+    const now = Date.now();
+    const oneHourAgo = now - 60 * 60 * 1000;
+    const stored = localStorage.getItem('taiwan_sos_danmaku_logs');
+
+    let logs = [];
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        // 過濾只保留前一個小時內的彈幕紀錄
+        logs = parsed.filter(item => item.timestamp >= oneHourAgo);
+      } catch (e) {
+        console.error('Failed to parse stored danmaku logs', e);
+      }
+    }
+
+    if (!logs || logs.length === 0) {
+      const formatTime = (ts) => {
+        const d = new Date(ts);
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        return `(${hh}時${mm}分)`;
+      };
+
+      logs = [
+        { id: 'dm-1', text: `📍 新北汐止大同路：站前廣場自來水水車加水站作業中 ${formatTime(now - 12 * 60 * 1000)}`, sender: '汐止民防組', topPercent: 16, speedSeconds: 15, timestamp: now - 12 * 60 * 1000 },
+        { id: 'dm-2', text: `📍 台北車站地下 B3 層：防空避難所空間充足通風中 ${formatTime(now - 28 * 60 * 1000)}`, sender: '雙北應變中心', topPercent: 26, speedSeconds: 17, timestamp: now - 28 * 60 * 1000 },
+        { id: 'dm-3', text: `📍 台中清泉崗：周邊社區加水站水車兩小時補水一次 ${formatTime(now - 42 * 60 * 1000)}`, sender: '中部後勤組', topPercent: 36, speedSeconds: 16, timestamp: now - 42 * 60 * 1000 },
+        { id: 'dm-4', text: `📍 高雄美麗島站：地下街備有外科創傷敷料與急救水包 ${formatTime(now - 52 * 60 * 1000)}`, sender: '南部醫療組', topPercent: 44, speedSeconds: 18, timestamp: now - 52 * 60 * 1000 }
+      ];
+      localStorage.setItem('taiwan_sos_danmaku_logs', JSON.stringify(logs));
+    }
+    return logs;
+  };
+
+  const [danmakuList, setDanmakuList] = useState(getInitialDanmakuLogs);
+
+  // 跨分頁 / 跨裝置 BroadcastChannel 即時連線同步
+  useEffect(() => {
+    if (!('BroadcastChannel' in window)) return;
+    const channel = new BroadcastChannel('taiwan_sos_danmaku_channel');
+    channel.onmessage = (event) => {
+      if (event.data && event.data.text) {
+        setDanmakuList(prev => {
+          if (prev.some(item => item.id === event.data.id)) return prev;
+          return [...prev, event.data];
+        });
+      }
+    };
+    return () => channel.close();
+  }, []);
 
   const handleSendDanmaku = (text) => {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const timeTag = `(${hh}時${mm}分)`;
+
+    const textWithTime = text.includes('分)') ? text : `${text} ${timeTag}`;
+
     const newDanmaku = {
-      id: `dm-${Date.now()}`,
-      text,
-      sender: cipherCode ? '暗碼親友' : '緊急通報',
-      topPercent: Math.floor(Math.random() * 35) + 15, // 15% ~ 50% 隨機高度
-      speedSeconds: 14
+      id: `dm-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      text: textWithTime,
+      sender: cipherCode ? '暗碼連線' : '全台廣播',
+      topPercent: Math.floor(Math.random() * 35) + 15,
+      speedSeconds: 14,
+      timestamp: Date.now()
     };
-    setDanmakuList(prev => [...prev, newDanmaku]);
+
+    setDanmakuList(prev => {
+      const updated = [...prev, newDanmaku];
+      const oneHourAgo = Date.now() - 60 * 60 * 1000;
+      const validLogs = updated.filter(item => item.timestamp >= oneHourAgo);
+      localStorage.setItem('taiwan_sos_danmaku_logs', JSON.stringify(validLogs));
+      return updated;
+    });
+
+    if ('BroadcastChannel' in window) {
+      try {
+        const channel = new BroadcastChannel('taiwan_sos_danmaku_channel');
+        channel.postMessage(newDanmaku);
+        channel.close();
+      } catch (e) {
+        console.warn('BroadcastChannel error:', e);
+      }
+    }
   };
 
   // 圖層開關狀態
