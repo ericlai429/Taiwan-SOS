@@ -3,12 +3,31 @@ import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff, ShieldCheck } f
 import { encryptMessage, decryptMessage } from '../services/crypto';
 import { getStoredCipherCode, setStoredCipherCode, getStoredMessages, saveMessage, appendDayTimeLog } from '../services/storage';
 import { sanitizeHTML, checkCipherStrength } from '../utils/security';
+import { networkSync } from '../services/networkSync';
 
 export default function CipherChat({ cipherCode, setCipherCode }) {
   const [inputCode, setInputCode] = useState(cipherCode || '');
   const [messages, setMessages] = useState([]);
   const [decryptedList, setDecryptedList] = useState([]);
   const [inputText, setInputText] = useState('');
+
+  // 📌 跨裝置 (手機 <-> 電腦/NB) 即時同步頻道設定與監聽
+  useEffect(() => {
+    networkSync.setChannel(cipherCode);
+
+    const unsubscribe = networkSync.subscribe((payload) => {
+      if (payload && payload.type === 'CHAT_MESSAGE' && payload.data) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === payload.data.id)) return prev;
+          const updated = [...prev, payload.data];
+          saveMessage(payload.data);
+          return updated;
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [cipherCode]);
 
   // 📌 自動偵測/預設手機末 3 碼
   const [phone3Digits, setPhone3Digits] = useState(() => {
@@ -117,6 +136,8 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
       message: cipherText,
       isEncrypted: newMsg.isEncrypted
     });
+    // 🌐 跨裝置 (手機 <-> 電腦/NB) 即時網路廣播發送
+    networkSync.broadcast('CHAT_MESSAGE', newMsg);
     setMessages(updated);
     setInputText('');
   };

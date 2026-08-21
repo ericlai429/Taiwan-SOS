@@ -31,6 +31,7 @@ import DanmakuInputBar from './DanmakuInputBar';
 import Tooltip from './Tooltip';
 import GPSShareModal from './GPSShareModal';
 import { Share2 } from 'lucide-react';
+import { networkSync } from '../services/networkSync';
 import invasionHistoryData from '../data/invasion_history.json';
 import osintVectorsData from '../data/osint_vectors.json';
 
@@ -123,20 +124,23 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
 
   const [danmakuList, setDanmakuList] = useState(getInitialDanmakuLogs);
 
-  // 跨分頁 / 跨裝置 BroadcastChannel 即時連線同步
+  // 跨分頁 / 跨實體裝置 (手機 <-> 電腦/NB 4G/Wi-Fi) 即時連線對齊
   useEffect(() => {
-    if (!('BroadcastChannel' in window)) return;
-    const channel = new BroadcastChannel('taiwan_sos_danmaku_channel');
-    channel.onmessage = (event) => {
-      if (event.data && event.data.text) {
+    networkSync.setChannel(cipherCode);
+
+    const unsubscribe = networkSync.subscribe((payload) => {
+      if (payload && payload.type === 'DANMAKU' && payload.data) {
         setDanmakuList(prev => {
-          if (prev.some(item => item.id === event.data.id)) return prev;
-          return [...prev, event.data];
+          if (prev.some(item => item.id === payload.data.id)) return prev;
+          const updated = [...prev, payload.data];
+          const oneHourAgo = Date.now() - 60 * 60 * 1000;
+          return updated.filter(item => item.timestamp >= oneHourAgo);
         });
       }
-    };
-    return () => channel.close();
-  }, []);
+    });
+
+    return () => unsubscribe();
+  }, [cipherCode]);
 
   const handleSendDanmaku = (text) => {
     const now = new Date();
@@ -163,15 +167,8 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
       return updated;
     });
 
-    if ('BroadcastChannel' in window) {
-      try {
-        const channel = new BroadcastChannel('taiwan_sos_danmaku_channel');
-        channel.postMessage(newDanmaku);
-        channel.close();
-      } catch (e) {
-        console.warn('BroadcastChannel error:', e);
-      }
-    }
+    // 🌐 跨裝置 (手機 <-> 電腦/NB) 即時網路廣播對齊
+    networkSync.broadcast('DANMAKU', newDanmaku);
   };
 
   // 圖層開關狀態
