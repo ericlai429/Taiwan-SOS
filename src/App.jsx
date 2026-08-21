@@ -80,9 +80,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none pb-28 sm:pb-24">
       {/* 頂部長輩高對比標頭 (嚴禁任何按鈕擠出螢幕) */}
-      {/* 📌 safe-area-inset-top 自動偵測動態島/劉海/狀態列高度 (iPhone 14 Pro=59px, 劉海=44px, 無缺口=0px) */}
+      {/* 📌 safe-area-inset-top 自動偵測動態島/劉海/狀態列高度 (iPhone 14 Pro=59px, 劉海=44px, 無缺口=0px) + 2% 邊緣距離防護 */}
       <header
-        className="bg-slate-900 border-b border-slate-800 px-2 sticky top-0 z-50 shadow-md backdrop-blur-md bg-slate-900/95"
+        className="bg-slate-900 border-b border-slate-800 px-[2vw] sticky top-0 z-50 shadow-md backdrop-blur-md bg-slate-900/95"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-1 h-9 sm:h-10 overflow-hidden">
@@ -168,8 +168,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* 主頁面內容 */}
-      <main className="flex-1 w-full max-w-4xl mx-auto">
+      {/* 主頁面內容 (2% 邊緣距離防護) */}
+      <main className="flex-1 w-full max-w-4xl mx-auto px-[2vw]">
         {activeTab === 'map' && (
           <SafeMap
             cipherCode={cipherCode}
