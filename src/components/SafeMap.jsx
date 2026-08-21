@@ -573,6 +573,71 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     }
   }, [showUtility, showBlockade, showCasualty, showMissile, showCoastal, showInvasion, currentInvasionStep, decryptedCustomHazards]);
 
+  // 📌 1. 動態計算 5 級距點位標籤 (與 5 級縮放按鈕完全連動，徹底解決卡片全擠在一起 Bug)
+  const createSmartMarkerIcon = (iconSymbol, name, badgeColor, level) => {
+    if (level === 1) {
+      // 微型 25px: 極簡圓形圖示 (0% 遮擋)
+      return L.divIcon({
+        className: 'smart-dot-icon',
+        html: `<div class="${badgeColor} text-white font-black w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-xs shadow-xl transition-all active:scale-125 hover:scale-110">${iconSymbol}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+    } else if (level === 2) {
+      // 精簡 33px: 微型膠囊 4 字簡稱
+      const shortName = name.length > 5 ? name.substring(0, 4) + '..' : name;
+      return L.divIcon({
+        className: 'smart-mini-icon',
+        html: `<div class="${badgeColor} text-white font-extrabold px-1.5 py-0.5 rounded-full border border-white text-[11px] shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
+        iconSize: [75, 24],
+        iconAnchor: [37, 12]
+      });
+    } else if (level === 3) {
+      // 標準 42px: 6 字簡稱
+      const shortName = name.length > 8 ? name.substring(0, 7) + '..' : name;
+      return L.divIcon({
+        className: 'smart-std-icon',
+        html: `<div class="${badgeColor} text-white font-extrabold px-2 py-1 rounded-xl border border-white text-xs shadow-lg flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${shortName}</div>`,
+        iconSize: [110, 28],
+        iconAnchor: [55, 14]
+      });
+    } else {
+      // 長輩 / 特大 50px~60px: 完整名稱
+      return L.divIcon({
+        className: 'smart-full-icon',
+        html: `<div class="${badgeColor} text-white font-black px-2.5 py-1.5 rounded-xl border-2 border-white text-senior-sm shadow-xl flex items-center gap-1 whitespace-nowrap">${iconSymbol} ${name}</div>`,
+        iconSize: [145, 34],
+        iconAnchor: [72, 17]
+      });
+    }
+  };
+
+  // 📌 2. 蛛網狀防碰撞散開演算法 (Radial Collision Offset Algorithm)
+  const getOffsetLatLng = (itemList, currentIndex) => {
+    const target = itemList[currentIndex];
+    let sameGroup = [];
+    for (let i = 0; i < itemList.length; i++) {
+      const dLat = Math.abs(itemList[i].lat - target.lat);
+      const dLng = Math.abs(itemList[i].lng - target.lng);
+      if (dLat < 0.0035 && dLng < 0.0035) {
+        sameGroup.push(i);
+      }
+    }
+
+    if (sameGroup.length <= 1) {
+      return [target.lat, target.lng];
+    }
+
+    const posInGroup = sameGroup.indexOf(currentIndex);
+    const angle = (posInGroup / sameGroup.length) * 2 * Math.PI;
+    const offsetDistance = 0.0016; // 散開距離約 160 米，防完全重疊
+
+    return [
+      target.lat + offsetDistance * Math.sin(angle),
+      target.lng + offsetDistance * Math.cos(angle)
+    ];
+  };
+
   // 6. 避難所、醫療、物資、派出所/消防/診所與親友旗標點位渲染
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -584,10 +649,10 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     const filteredHighRisk = useRadiusFilter ? filterWithinRadius(highRiskData, userLocation.lat, userLocation.lng, radiusKm) : highRiskData;
     const filteredFacilities = useRadiusFilter ? filterWithinRadius(facilitiesData, userLocation.lat, userLocation.lng, radiusKm) : facilitiesData;
 
-    // E. 派出所、消防隊、活動中心、外科診所
+    // E. 派出所、消防隊、活動中心、外科診所 (防碰撞散開 + 5 級距圖標)
     layersRef.current.facilitiesGroup.clearLayers();
     if (showFacilities) {
-      filteredFacilities.forEach(item => {
+      filteredFacilities.forEach((item, idx) => {
         const badgeColor =
           item.type === 'police' ? 'bg-blue-600' :
           item.type === 'fire' ? 'bg-orange-600' :
@@ -598,14 +663,10 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
           item.type === 'fire' ? '🚒' :
           item.type === 'community' ? '🏛️' : '🩺';
 
-        const icon = L.divIcon({
-          className: 'facility-icon',
-          html: `<div class="${badgeColor} text-white font-extrabold px-2 py-1 rounded-xl shadow-md border-2 border-white text-xs flex items-center gap-1">${iconSymbol} ${item.name}</div>`,
-          iconSize: [130, 30],
-          iconAnchor: [65, 15]
-        });
+        const icon = createSmartMarkerIcon(iconSymbol, item.name, badgeColor, btnLevel);
+        const pos = getOffsetLatLng(filteredFacilities, idx);
 
-        const marker = L.marker([item.lat, item.lng], { icon })
+        const marker = L.marker(pos, { icon })
           .bindPopup(`
             <div style="font-family: sans-serif; padding: 4px;">
               <h4 style="font-size: 15px; font-weight: bold; color: #38bdf8; margin:0 0 4px 0;">${iconSymbol} ${item.name}</h4>
@@ -615,7 +676,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
               <p style="margin:2px 0; color:#94a3b8;">${item.notes || ''}</p>
               <button id="nav-btn-${item.id}" style="margin-top:8px; width:100%; background:#0284c7; color:#fff; font-weight:bold; border:none; padding:8px; border-radius:8px; cursor:pointer;">🚀 開始導航前往</button>
             </div>
-          `);
+          `, { autoPan: false, keepInView: true });
 
         marker.on('popupopen', () => {
           const btn = document.getElementById(`nav-btn-${item.id}`);
@@ -626,17 +687,14 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
       });
     }
 
-    // A. 避難所
+    // A. 避難所 (防碰撞散開 + 5 級距圖標)
     layersRef.current.sheltersGroup.clearLayers();
     if (showShelters) {
-      filteredShelters.forEach(item => {
-        const icon = L.divIcon({
-          className: 'shelter-icon',
-          html: `<div class="bg-emerald-600 text-white font-extrabold px-2 py-1 rounded-xl shadow-md border-2 border-white text-xs flex items-center gap-1">🛡️ ${item.name}</div>`,
-          iconSize: [120, 30],
-          iconAnchor: [60, 15]
-        });
-        const marker = L.marker([item.lat, item.lng], { icon })
+      filteredShelters.forEach((item, idx) => {
+        const icon = createSmartMarkerIcon('🛡️', item.name, 'bg-emerald-600', btnLevel);
+        const pos = getOffsetLatLng(filteredShelters, idx);
+
+        const marker = L.marker(pos, { icon })
           .bindPopup(`
             <div style="font-family: sans-serif; padding: 4px;">
               <h4 style="font-size: 16px; font-weight: bold; color: #15803d; margin:0 0 4px 0;">🛡️ ${item.name}</h4>
@@ -644,7 +702,8 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
               <p style="margin: 2px 0;"><b>容納人數：</b>${item.capacity} 人</p>
               <button id="nav-btn-${item.id}" style="margin-top:8px; width:100%; background:#16a34a; color:#fff; font-weight:bold; border:none; padding:8px; border-radius:8px; cursor:pointer;">🚀 開始導航前往此避難所</button>
             </div>
-          `);
+          `, { autoPan: false, keepInView: true });
+
         marker.on('popupopen', () => {
           const btn = document.getElementById(`nav-btn-${item.id}`);
           if (btn) btn.onclick = () => startNavigation(item);
@@ -653,17 +712,14 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
       });
     }
 
-    // B. 醫療
+    // B. 醫療 (防碰撞散開 + 5 級距圖標)
     layersRef.current.medicalGroup.clearLayers();
     if (showMedical) {
-      filteredMedical.forEach(item => {
-        const icon = L.divIcon({
-          className: 'med-icon',
-          html: `<div class="bg-rose-600 text-white font-extrabold px-2 py-1 rounded-xl shadow-md border-2 border-white text-xs flex items-center gap-1">🏥 ${item.name}</div>`,
-          iconSize: [120, 30],
-          iconAnchor: [60, 15]
-        });
-        const marker = L.marker([item.lat, item.lng], { icon })
+      filteredMedical.forEach((item, idx) => {
+        const icon = createSmartMarkerIcon('🏥', item.name, 'bg-rose-600', btnLevel);
+        const pos = getOffsetLatLng(filteredMedical, idx);
+
+        const marker = L.marker(pos, { icon })
           .bindPopup(`
             <div style="font-family: sans-serif; padding: 4px;">
               <h4 style="font-size: 16px; font-weight: bold; color: #b91c1c; margin:0 0 4px 0;">🏥 ${item.name}</h4>
@@ -671,7 +727,8 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
               <p style="margin: 2px 0;"><b>電話：</b><a href="tel:${item.phone}">${item.phone}</a></p>
               <button id="nav-btn-${item.id}" style="margin-top:8px; width:100%; background:#dc2626; color:#fff; font-weight:bold; border:none; padding:8px; border-radius:8px; cursor:pointer;">🚀 開始導航前往急救醫療</button>
             </div>
-          `);
+          `, { autoPan: false, keepInView: true });
+
         marker.on('popupopen', () => {
           const btn = document.getElementById(`nav-btn-${item.id}`);
           if (btn) btn.onclick = () => startNavigation(item);
@@ -680,24 +737,22 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
       });
     }
 
-    // C. 物資
+    // C. 物資 (防碰撞散開 + 5 級距圖標)
     layersRef.current.suppliesGroup.clearLayers();
     if (showSupplies) {
-      filteredSupplies.forEach(item => {
-        const icon = L.divIcon({
-          className: 'sup-icon',
-          html: `<div class="bg-amber-600 text-white font-extrabold px-2 py-1 rounded-xl shadow-md border-2 border-white text-xs flex items-center gap-1">📦 ${item.name}</div>`,
-          iconSize: [120, 30],
-          iconAnchor: [60, 15]
-        });
-        const marker = L.marker([item.lat, item.lng], { icon })
+      filteredSupplies.forEach((item, idx) => {
+        const icon = createSmartMarkerIcon('📦', item.name, 'bg-amber-600', btnLevel);
+        const pos = getOffsetLatLng(filteredSupplies, idx);
+
+        const marker = L.marker(pos, { icon })
           .bindPopup(`
             <div style="font-family: sans-serif; padding: 4px;">
               <h4 style="font-size: 16px; font-weight: bold; color: #d97706; margin:0 0 4px 0;">📦 ${item.name}</h4>
               <p style="margin: 2px 0;"><b>發放物資：</b>${item.items ? item.items.join('、') : '水與口糧'}</p>
               <button id="nav-btn-${item.id}" style="margin-top:8px; width:100%; background:#d97706; color:#fff; font-weight:bold; border:none; padding:8px; border-radius:8px; cursor:pointer;">🚀 開始導航前往領取物資</button>
             </div>
-          `);
+          `, { autoPan: false, keepInView: true });
+
         marker.on('popupopen', () => {
           const btn = document.getElementById(`nav-btn-${item.id}`);
           if (btn) btn.onclick = () => startNavigation(item);
@@ -722,13 +777,14 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
         const marker = L.marker([flag.lat, flag.lng], { icon }).bindPopup(
           isUnlocked
             ? `<div style="padding:4px;"><h4 style="font-weight:bold; color:#dc2626;">🚩 ${flag.title}</h4><p>${flag.description || ''}</p></div>`
-            : `<div style="padding:4px;"><h4 style="color:#d97706;">🔒 暗碼保護情報</h4></div>`
+            : `<div style="padding:4px;"><h4 style="color:#d97706;">🔒 暗碼保護情報</h4></div>`,
+          { autoPan: false, keepInView: true }
         );
         layersRef.current.dangerFlagsGroup.addLayer(marker);
       });
     }
   }, [
-    userLocation, useRadiusFilter, radiusKm, showShelters, showMedical, showSupplies, showFacilities, showDangerFlags, decryptedFlags
+    userLocation, useRadiusFilter, radiusKm, showShelters, showMedical, showSupplies, showFacilities, showDangerFlags, decryptedFlags, btnLevel
   ]);
 
   // 7. 導航路線 (Polyline) 繪製
