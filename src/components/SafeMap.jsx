@@ -597,7 +597,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
       {/* 📢 彈幕廣播動態文字圖層 (從右往左移動) */}
       <DanmakuOverlay danmakuList={danmakuList} />
 
-      {/* 頂部全台 22 縣市定位與災害圖例列 */}
+      {/* 🛡️ 智能網格分區 1：頂部全台 22 縣市定位與災害圖例列 */}
       <div className={`absolute top-3 z-[990] max-w-lg space-y-1.5 transition-all ${
         isLandscape && isMobile ? 'left-16 right-3' : 'left-3 right-3 sm:right-auto'
       }`}>
@@ -619,27 +619,32 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
         />
       </div>
 
-      {/* 📢 底部即時彈幕廣播發話列 (寬敞大字體輸入) */}
-      <div className={`absolute bottom-3 z-[990] transition-all ${
-        isLandscape && isMobile ? 'left-40 right-3' : 'left-3 right-3 sm:left-36 max-w-xl'
+      {/* 🛡️ 智能網格分區 2：底部防碰撞與防重疊統一步局欄 (Unified Dock Flex Column) */}
+      <div className={`absolute bottom-3 z-[990] flex flex-col gap-2 transition-all pointer-events-auto ${
+        isLandscape && isMobile
+          ? 'left-40 right-14'
+          : `left-3 ${
+              btnLevel === 1 ? 'right-10' :
+              btnLevel === 2 ? 'right-12' :
+              btnLevel === 3 ? 'right-14 sm:right-36' :
+              btnLevel === 4 ? 'right-16 sm:right-40' :
+              'right-20 sm:right-44'
+            } max-w-xl`
       }`}>
-        <DanmakuInputBar onSendDanmaku={handleSendDanmaku} />
-      </div>
-
-      {/* 底部敵佔領與快艇推進 30 分鐘時間軸拖拉回放控制器 (InvasionPlaybackBar) */}
-      {showInvasion && (
-        <div className={`absolute bottom-16 z-[990] transition-all ${
-          isLandscape && isMobile ? 'left-40 right-3' : 'left-3 right-3 sm:left-36 max-w-xl'
-        }`}>
+        {/* 1. 敵佔領與快艇推進 30 分鐘時間軸 (自動位於上方，無重疊) */}
+        {showInvasion && (
           <InvasionPlaybackBar
             currentStepIndex={currentInvasionStep}
             setCurrentStepIndex={setCurrentInvasionStep}
           />
-        </div>
-      )}
+        )}
 
-      {/* 側邊按鈕控制列 (支援 5 級距按鈕尺寸: 25px, 33px, 42px, 50px, 60px) */}
-      <div className={`absolute bottom-16 z-[990] flex flex-col gap-1.5 transition-all ${
+        {/* 2. 即時彈幕發話列 (自動位於下方，無重疊) */}
+        <DanmakuInputBar onSendDanmaku={handleSendDanmaku} />
+      </div>
+
+      {/* 🛡️ 智能網格分區 3：右側側邊功能欄 (獨立動態定位，絕對零遮擋) */}
+      <div className={`absolute bottom-3 z-[995] flex flex-col gap-1.5 transition-all ${
         isLandscape && isMobile ? 'left-16' : 'right-3'
       }`}>
         <Tooltip text="我的位置：重新定位至 GPS 動態座標" position="left">
