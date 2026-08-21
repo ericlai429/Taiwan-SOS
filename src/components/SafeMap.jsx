@@ -868,6 +868,52 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
         layersRef.current.dangerFlagsGroup.addLayer(marker);
       });
     }
+
+    // F. ⚡💧 關鍵電廠與淨水場危險熱區 (High Risk Power & Water Facilities)
+    layersRef.current.highRiskGroup.clearLayers();
+    filteredHighRisk.forEach((item, idx) => {
+      const isPower = item.category === 'power';
+      const isWater = item.category === 'water';
+      const iconSymbol = isPower ? '⚡' : isWater ? '💧' : '🏛️';
+      const badgeBg = isPower
+        ? 'bg-amber-950/95 text-amber-300 border-amber-500'
+        : isWater
+        ? 'bg-cyan-950/95 text-cyan-300 border-cyan-500'
+        : 'bg-rose-950/95 text-rose-300 border-rose-500';
+
+      const icon = L.divIcon({
+        className: 'high-risk-icon',
+        html: `<div class="${badgeBg} font-black px-2 py-0.5 rounded-full border-2 text-[10px] shadow-xl flex items-center gap-1 whitespace-nowrap animate-pulse">${iconSymbol} ${item.name}</div>`,
+        iconSize: [130, 24],
+        iconAnchor: [65, 12]
+      });
+
+      const pos = getOffsetLatLng(filteredHighRisk, idx);
+      const marker = L.marker(pos, { icon }).bindPopup(`
+        <div style="font-family: sans-serif; padding: 4px;">
+          <h4 style="font-size: 15px; font-weight: bold; color: ${isPower ? '#f59e0b' : '#38bdf8'}; margin:0 0 4px 0;">${iconSymbol} ${item.name}</h4>
+          <p style="margin:2px 0;"><b>警示等級：</b><span style="color:#ef4444; font-weight:bold;">${item.risk_level}</span></p>
+          <p style="margin:2px 0;"><b>位址地區：</b>${item.city}${item.district}</p>
+          <p style="margin:4px 0; color:#cbd5e1; font-size:12px; line-height:1.4;">${item.reason}</p>
+          <div style="margin-top:6px; padding:4px 8px; background:#451a03; border:1px solid #d97706; border-radius:6px; color:#fde68a; font-size:11px; font-weight:bold;">
+            ⚠️ 建議一般避難民眾保持 ${item.radiusMeters || 800}m 以上安全避難距離
+          </div>
+        </div>
+      `, { autoPan: false, keepInView: true });
+
+      layersRef.current.highRiskGroup.addLayer(marker);
+
+      // 繪製紅/黃色危險熱區圈 (Danger Zone Circle)
+      const circle = L.circle(pos, {
+        radius: item.radiusMeters || 800,
+        color: isPower ? '#f59e0b' : isWater ? '#0284c7' : '#dc2626',
+        fillColor: isPower ? '#d97706' : isWater ? '#38bdf8' : '#ef4444',
+        fillOpacity: 0.22,
+        weight: 2,
+        dashArray: '6, 6'
+      });
+      layersRef.current.highRiskGroup.addLayer(circle);
+    });
   }, [
     userLocation, useRadiusFilter, radiusKm, showShelters, showMedical, showSupplies, showFacilities, showDangerFlags, decryptedFlags, btnLevel
   ]);

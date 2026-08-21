@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Droplets, Ban, Flame, ShieldCheck, Skull, AlertOctagon, Waves, ChevronDown, ChevronUp, Shield, Stethoscope, PackageCheck, Building2 } from 'lucide-react';
+import { Layers, Droplets, Ban, Flame, ShieldCheck, Skull, AlertOctagon, Waves, ChevronDown, ChevronUp, Shield, Stethoscope, PackageCheck, Building2, Zap } from 'lucide-react';
 
 export default function HazardLegendCard({
   showShelters, setShowShelters,
@@ -124,6 +124,19 @@ export default function HazardLegendCard({
           >
             <AlertOctagon className="w-4 h-4 text-rose-400 shrink-0" />
             <span>🚨 飛彈熱區</span>
+          </button>
+
+          {/* ⚡ 關鍵電廠與水廠危險熱區 */}
+          <button
+            onClick={() => setShowMissile(!showMissile)}
+            className={`px-2 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all text-xs ${
+              showMissile
+                ? 'bg-amber-950 border-amber-500 text-amber-300 shadow-md font-black animate-pulse'
+                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+            }`}
+          >
+            <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>⚡ 關鍵電廠與水廠</span>
           </button>
 
           {/* 🌊 沿海預警 */}
