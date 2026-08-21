@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taiwan-safe-haven-v2';
+const CACHE_NAME = 'taiwan-safe-haven-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -32,7 +32,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Stale-while-revalidate strategy for maximum offline availability
+  // Stale-while-revalidate strategy with index.html fallback for PWA launch
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
@@ -44,7 +44,8 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       }).catch(() => {
-        return cachedResponse;
+        // If network fails, return cached response or index.html fallback
+        return cachedResponse || caches.match('./index.html');
       });
       return cachedResponse || fetchPromise;
     })
