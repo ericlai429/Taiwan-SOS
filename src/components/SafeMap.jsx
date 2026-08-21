@@ -661,19 +661,9 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
         />
       </div>
 
-      {/* 🛡️ 智能網格分區 2：底部防碰撞與防重疊統一步局欄 (Unified Dock Flex Column) */}
-      <div className={`absolute bottom-3 z-[990] flex flex-col gap-2 transition-all pointer-events-auto ${
-        isLandscape && isMobile
-          ? 'left-40 right-14'
-          : `left-3 ${
-              btnLevel === 1 ? 'right-10' :
-              btnLevel === 2 ? 'right-12' :
-              btnLevel === 3 ? 'right-14 sm:right-36' :
-              btnLevel === 4 ? 'right-16 sm:right-40' :
-              'right-20 sm:right-44'
-            } max-w-xl`
-      }`}>
-        {/* 1. 敵佔領與快艇推進 30 分鐘時間軸 (自動位於上方，無重疊) */}
+      {/* 🛡️ 智能網格分區 2：廣播發話列 (畫面中央置中，支援上下自由拖動) */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[990] w-full max-w-lg px-3 transition-all pointer-events-auto flex flex-col gap-2">
+        {/* 1. 敵佔領與快艇推進 30 分鐘時間軸 (位於上方) */}
         {showInvasion && (
           <InvasionPlaybackBar
             currentStepIndex={currentInvasionStep}
@@ -681,7 +671,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
           />
         )}
 
-        {/* 2. 即時彈幕發話列 (自動位於下方，無重疊) */}
+        {/* 2. 即時彈幕發話列 (畫面中央置中，支援上下自由拖曳) */}
         <DanmakuInputBar onSendDanmaku={handleSendDanmaku} />
       </div>
 
