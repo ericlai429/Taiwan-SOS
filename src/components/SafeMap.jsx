@@ -1012,10 +1012,10 @@ export default function SafeMap({
       {/* 📢 彈幕廣播動態文字圖層 (純 GPU 合成層 translate3d) */}
       <DanmakuOverlay danmakuList={danmakuList} />
 
-      {/* 🛡️ 智能網格分區 1：頂部全台 22 縣市定位與災害圖例列 (2% 邊緣距離防護) */}
+      {/* 🛡️ 智能網格分區 1：頂部全台 22 縣市定位與災害圖例列 (右側預留 right-14 避開地圖 +/- 縮放按鈕) */}
       <div
-        className={`absolute z-[990] max-w-lg space-y-1.5 transition-all ${
-          isLandscape && isMobile ? 'left-16 right-[2vw]' : 'left-[2vw] right-[2vw] sm:right-auto'
+        className={`absolute z-[990] max-w-md space-y-1.5 transition-all ${
+          isLandscape && isMobile ? 'left-16 right-14' : 'left-[2vw] right-14 sm:right-auto'
         }`}
         style={{ top: 'max(12px, env(safe-area-inset-top, 12px))' }}
       >
