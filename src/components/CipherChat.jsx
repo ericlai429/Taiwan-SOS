@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff } from 'lucide-react';
+import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff, ShieldCheck } from 'lucide-react';
 import { encryptMessage, decryptMessage } from '../services/crypto';
 import { getStoredCipherCode, setStoredCipherCode, getStoredMessages, saveMessage } from '../services/storage';
+import { sanitizeHTML, checkCipherStrength } from '../utils/security';
 
 export default function CipherChat({ cipherCode, setCipherCode }) {
   const [inputCode, setInputCode] = useState(cipherCode || '');
@@ -9,7 +10,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
   const [decryptedList, setDecryptedList] = useState([]);
   const [inputText, setInputText] = useState('');
 
-  // 📌 自動偵測/預設手機末 3 碼 (支援自由修改與持久化)
+  // 📌 自動偵測/預設手機末 3 碼
   const [phone3Digits, setPhone3Digits] = useState(() => {
     try {
       const saved = localStorage.getItem('taiwan_sos_phone_3digits');
@@ -34,10 +35,14 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
   // 📌 匿名模式切換
   const [isAnonymous, setIsAnonymous] = useState(false);
 
-  // 計算動態發話抬頭
+  // 計算動態發話抬頭 (過濾 XSS)
+  const safeNickname = sanitizeHTML(customNickname.trim() || '親友');
+  const safe3Digits = sanitizeHTML(phone3Digits || '888');
   const currentSenderName = isAnonymous
-    ? `匿名親友 (末3碼: ${phone3Digits || '888'})`
-    : `${customNickname.trim() || '親友'} (末3碼: ${phone3Digits || '888'})`;
+    ? `匿名親友 (末3碼: ${safe3Digits})`
+    : `${safeNickname} (末3碼: ${safe3Digits})`;
+
+  const strength = checkCipherStrength(cipherCode);
 
   // 持久化儲存發話身份
   useEffect(() => {
@@ -60,7 +65,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     alert(`✅ 已切換暗碼為：${inputCode || '（未設定）'}`);
   };
 
-  // 即時解密訊息清單
+  // 即時解密訊息清單 ( sanitize 解密後文字防護 XSS )
   useEffect(() => {
     let isMounted = true;
     async function decryptAll() {
@@ -69,9 +74,9 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
           if (m.isEncrypted) {
             const dec = await decryptMessage(m.text, cipherCode);
             const isSuccess = !dec.startsWith('🔒') && !dec.startsWith('⚠️');
-            return { ...m, decryptedText: dec, isUnlocked: isSuccess };
+            return { ...m, decryptedText: isSuccess ? sanitizeHTML(dec) : dec, isUnlocked: isSuccess };
           }
-          return { ...m, decryptedText: m.text, isUnlocked: true };
+          return { ...m, decryptedText: sanitizeHTML(m.text), isUnlocked: true };
         })
       );
       if (isMounted) setDecryptedList(result);
@@ -80,10 +85,11 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     return () => { isMounted = false; };
   }, [messages, cipherCode]);
 
-  // 發送加密訊息
+  // 發送加密訊息 (雙重防護 XSS 與端到端 AES-GCM 256-bit 加密)
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    const cleanText = sanitizeHTML(inputText.trim());
+    if (!cleanText) return;
 
     if (!cipherCode) {
       if (!confirm('⚠️ 當前未設定『暗碼』，訊息將以一般文字發送。是否繼續？')) {
@@ -92,8 +98,8 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     }
 
     const cipherText = cipherCode
-      ? await encryptMessage(inputText, cipherCode)
-      : inputText;
+      ? await encryptMessage(cleanText, cipherCode)
+      : cleanText;
 
     const newMsg = {
       id: 'msg-' + Date.now(),
@@ -129,20 +135,27 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
           </span>
         </div>
 
-        <form onSubmit={handleSaveCipher} className="flex gap-2">
-          <input
-            type="text"
-            value={inputCode}
-            onChange={(e) => setInputCode(e.target.value)}
-            placeholder="請輸入親友約定暗碼 (如: FAMILY888)"
-            className="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-[15px] font-bold text-amber-300 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-[15px] shadow active:scale-95 border border-cyan-300 shrink-0"
-          >
-            設定對齊
-          </button>
+        <form onSubmit={handleSaveCipher} className="space-y-1.5">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={inputCode}
+              onChange={(e) => setInputCode(e.target.value)}
+              placeholder="請輸入親友約定暗碼 (如: FAMILY888)"
+              className="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-[15px] font-bold text-amber-300 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-[15px] shadow active:scale-95 border border-cyan-300 shrink-0"
+            >
+              設定對齊
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] px-1 font-bold">
+            <span className="text-slate-400">暗碼強度評估：</span>
+            <span className={strength.color}>{strength.label}</span>
+          </div>
         </form>
 
         <p className="text-[12px] text-slate-400 bg-slate-900/60 p-2.5 rounded-xl border border-slate-700 leading-normal">
