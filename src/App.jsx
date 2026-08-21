@@ -178,10 +178,11 @@ export default function App() {
         )}
       </main>
 
-      {/* 導覽列 */}
+      {/* 導覽列 (匹配 5 級距按鈕尺寸切換) */}
       <SeniorNavbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        btnLevel={btnLevel}
       />
 
       {/* 應變工具 Modals */}
