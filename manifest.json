@@ -2,18 +2,19 @@
   "name": "台灣急難通 (Taiwan SOS) - 雙北桃園安全避難與動態導航網",
   "short_name": "台灣急難通",
   "description": "雙北與桃園地區專用之長輩友善安全避難、防空設施、物資醫療點位與暗碼加密防駭群組通訊 PWA 系統",
-  "start_url": "/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#020617",
   "theme_color": "#16a34a",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
