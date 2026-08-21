@@ -1,8 +1,8 @@
-const CACHE_NAME = 'taiwan-safe-haven-v1';
+const CACHE_NAME = 'taiwan-safe-haven-v2';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+  './',
+  './index.html',
+  './manifest.json',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];
@@ -44,7 +44,6 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       }).catch(() => {
-        // Network failed, return cached response
         return cachedResponse;
       });
       return cachedResponse || fetchPromise;
