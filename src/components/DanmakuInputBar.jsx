@@ -5,11 +5,11 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
   const [text, setText] = useState('');
   const [cooldownSec, setCooldownSec] = useState(0);
 
-  // 垂直自由拖動 Y 軸位移狀態 (可上下自由滑動，預設在 0)
-  const [offsetY, setOffsetY] = useState(0);
+  // 垂直自由拖動直接操作 DOM，避開 React State 重新渲染 (徹底解決地圖範圍圈消失 Bug)
+  const containerRef = useRef(null);
   const isDraggingRef = useRef(false);
   const startYRef = useRef(0);
-  const initialOffsetRef = useRef(0);
+  const currentOffsetRef = useRef(0);
 
   // 30 秒冷卻倒數計時器
   useEffect(() => {
@@ -22,38 +22,53 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
     return () => clearInterval(timer);
   }, [cooldownSec]);
 
-  // Touch & Mouse 垂直拖曳處理
-  const handleDragStart = (clientY) => {
+  // Touch & Mouse 垂直拖曳處理 (直接更新 DOM style.transform，並呼叫 stopPropagation)
+  const handleDragStart = (clientY, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     isDraggingRef.current = true;
     startYRef.current = clientY;
-    initialOffsetRef.current = offsetY;
   };
 
-  const handleDragMove = (clientY) => {
+  const handleDragMove = (clientY, e) => {
     if (!isDraggingRef.current) return;
+    if (e && e.stopPropagation) e.stopPropagation();
+
     const deltaY = clientY - startYRef.current;
     // 限制拖動範圍在向上 -450px 到向下 0px 之間 (絕不覆蓋底部導覽列)
-    const newOffset = Math.min(0, Math.max(-450, initialOffsetRef.current + deltaY));
-    setOffsetY(newOffset);
+    const newOffset = Math.min(0, Math.max(-450, currentOffsetRef.current + deltaY));
+
+    if (containerRef.current) {
+      containerRef.current.style.transform = `translateY(${newOffset}px)`;
+    }
   };
 
-  const handleDragEnd = () => {
-    isDraggingRef.current = false;
+  const handleDragEnd = (e) => {
+    if (isDraggingRef.current) {
+      if (e && e.stopPropagation) e.stopPropagation();
+      isDraggingRef.current = false;
+      // 紀錄最終位移
+      if (containerRef.current) {
+        const match = containerRef.current.style.transform.match(/translateY\((-?\d+\.?\d*)px\)/);
+        if (match && match[1]) {
+          currentOffsetRef.current = parseFloat(match[1]);
+        }
+      }
+    }
   };
 
   useEffect(() => {
-    const onMouseMove = (e) => handleDragMove(e.clientY);
-    const onMouseUp = () => handleDragEnd();
+    const onMouseMove = (e) => handleDragMove(e.clientY, e);
+    const onMouseUp = (e) => handleDragEnd(e);
     const onTouchMove = (e) => {
       if (isDraggingRef.current && e.touches[0]) {
-        handleDragMove(e.touches[0].clientY);
+        handleDragMove(e.touches[0].clientY, e);
       }
     };
-    const onTouchEnd = () => handleDragEnd();
+    const onTouchEnd = (e) => handleDragEnd(e);
 
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
-    window.addEventListener('touchmove', onTouchMove);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('touchend', onTouchEnd);
 
     return () => {
@@ -76,14 +91,15 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
 
   return (
     <div
-      style={{ transform: `translateY(${offsetY}px)` }}
-      className="w-full transition-transform duration-75 touch-none"
+      ref={containerRef}
+      style={{ transform: 'translateY(0px)' }}
+      className="w-full touch-none"
     >
       {/* ═ 上下自由拖動控制抓把手 (Vertical Drag Handle) */}
       <div
-        onMouseDown={(e) => handleDragStart(e.clientY)}
-        onTouchStart={(e) => e.touches[0] && handleDragStart(e.touches[0].clientY)}
-        className="w-full flex items-center justify-center py-1 cursor-grab active:cursor-grabbing bg-slate-900/90 rounded-t-2xl border-t-2 border-x-2 border-cyan-500/80 shadow-md select-none"
+        onMouseDown={(e) => handleDragStart(e.clientY, e)}
+        onTouchStart={(e) => e.touches[0] && handleDragStart(e.touches[0].clientY, e)}
+        className="w-full flex items-center justify-center py-1 cursor-grab active:cursor-grabbing bg-slate-900/95 rounded-t-2xl border-t-2 border-x-2 border-cyan-500/80 shadow-md select-none"
         title="按住此處可上下自由拖動發話框"
       >
         <div className="flex items-center gap-1.5 text-cyan-400">
@@ -100,7 +116,7 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
           <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
         </div>
 
-        {/* 大尺寸、寬敞輸入框 */}
+        {/* 寬敞輸入框 */}
         <input
           type="text"
           value={text}
@@ -111,7 +127,7 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
           className="flex-1 bg-slate-950 text-white placeholder-slate-400 text-senior-base font-bold px-3.5 py-2 h-11 rounded-xl border-2 border-slate-700 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 disabled:opacity-50 transition-all min-w-0"
         />
 
-        {/* 大尺寸發射按鈕 */}
+        {/* 發射按鈕 */}
         <button
           type="submit"
           disabled={!text.trim() || cooldownSec > 0}
