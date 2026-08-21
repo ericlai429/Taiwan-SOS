@@ -116,7 +116,7 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
           <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
         </div>
 
-        {/* 精簡型廣播輸入框 (縮小 50%) */}
+        {/* 寬敞極致可視面積輸入框 */}
         <input
           type="text"
           value={text}
@@ -127,26 +127,21 @@ export default function DanmakuInputBar({ onSendDanmaku }) {
           className="flex-1 bg-slate-950 text-white placeholder-slate-400 text-xs font-semibold px-2.5 py-1 h-8 rounded-lg border border-slate-700 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 disabled:opacity-50 transition-all min-w-0"
         />
 
-        {/* 精簡型發射按鈕 (縮小 50%) */}
+        {/* 純紙飛機圖示發射按鈕 (取消文字「發射」，大幅增加輸入框可視面積) */}
         <button
           type="submit"
           disabled={!text.trim() || cooldownSec > 0}
-          className={`h-8 px-2.5 rounded-lg font-bold text-xs flex items-center gap-1 shadow-md border transition-all shrink-0 active:scale-95 ${
+          title="點擊發射廣播"
+          className={`w-9 h-8 rounded-lg font-bold text-xs flex items-center justify-center shadow-md border transition-all shrink-0 active:scale-95 ${
             cooldownSec > 0
               ? 'bg-slate-800 border-slate-700 text-amber-400 cursor-not-allowed'
               : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-cyan-300 text-white'
           }`}
         >
           {cooldownSec > 0 ? (
-            <>
-              <Clock className="w-3 h-3 text-amber-400 animate-spin" />
-              <span className="font-mono text-[11px]">{cooldownSec}s</span>
-            </>
+            <span className="font-mono text-[10px] text-amber-400 font-bold">{cooldownSec}s</span>
           ) : (
-            <>
-              <Send className="w-3 h-3" />
-              <span>發射</span>
-            </>
+            <Send className="w-4 h-4 text-white" />
           )}
         </button>
       </form>
