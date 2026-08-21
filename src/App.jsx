@@ -85,13 +85,13 @@ export default function App() {
         className="bg-slate-900 border-b border-slate-800 px-[2vw] sticky top-0 z-50 shadow-md backdrop-blur-md bg-slate-900/95"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-1 h-9 sm:h-10 overflow-hidden">
+        <div className="max-w-3xl mx-auto flex items-center justify-between gap-0.5 sm:gap-1 h-9 sm:h-10">
           {/* 左側標題 */}
           <div className="flex items-center gap-1 shrink-0">
             <div className="p-1 sm:p-1.5 bg-emerald-600 rounded-xl shadow-md shrink-0">
-              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <Shield className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
             </div>
-            <h1 className="text-xs sm:text-senior-lg font-black tracking-tight sm:tracking-wide text-white whitespace-nowrap shrink-0">
+            <h1 className="text-[11px] sm:text-senior-lg font-black tracking-tighter sm:tracking-wide text-white whitespace-nowrap shrink-0">
               台灣急難通
             </h1>
             {cipherCode && (
@@ -101,15 +101,15 @@ export default function App() {
             )}
           </div>
 
-          {/* 右側工具列 (防擠出螢幕，極致精準縮放) */}
+          {/* 右側工具列 (極致小螢幕相容，確保 119 絕對零裁切) */}
           <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             {/* ⚙️ 5 級距按鈕切換鈕 */}
             <Tooltip text={`按鈕尺寸：當前【${currentLevelConfig.label}】(點擊切換)`} position="bottom">
               <button
                 onClick={cycleBtnLevel}
-                className="h-[32px] sm:h-[34px] px-1.5 sm:px-2 bg-purple-700 hover:bg-purple-600 border border-purple-400 text-white rounded-xl text-xs font-black flex items-center justify-center shrink-0 active:scale-95 transition-all"
+                className="h-[28px] sm:h-[34px] px-1 sm:px-2 bg-purple-700 hover:bg-purple-600 border border-purple-400 text-white rounded-xl text-[10px] sm:text-xs font-black flex items-center justify-center shrink-0 active:scale-95 transition-all"
               >
-                <Sliders className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <Sliders className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300 shrink-0" />
                 <span className="hidden md:inline ml-1 whitespace-nowrap">{currentLevelConfig.px}px</span>
               </button>
             </Tooltip>
@@ -118,9 +118,9 @@ export default function App() {
             <Tooltip text="重置暫存：清空舊資料與離線快取" position="bottom">
               <button
                 onClick={handleResetData}
-                className="h-[32px] w-[32px] sm:h-[34px] sm:w-[34px] bg-slate-800 hover:bg-rose-950 text-slate-300 rounded-xl border border-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-all"
+                className="h-[28px] w-[28px] sm:h-[34px] sm:w-[34px] bg-slate-800 hover:bg-rose-950 text-slate-300 rounded-xl border border-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-all"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
               </button>
             </Tooltip>
 
@@ -128,9 +128,9 @@ export default function App() {
             <Tooltip text="手電筒：極致白光與 SOS 爆閃燈" position="bottom">
               <button
                 onClick={() => setIsFlashlightOpen(true)}
-                className="h-[32px] w-[32px] sm:h-[34px] sm:w-[34px] bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-xl border border-amber-600 flex items-center justify-center shrink-0 active:scale-95"
+                className="h-[28px] w-[28px] sm:h-[34px] sm:w-[34px] bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-xl border border-amber-600 flex items-center justify-center shrink-0 active:scale-95"
               >
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
               </button>
             </Tooltip>
 
@@ -138,9 +138,9 @@ export default function App() {
             <Tooltip text="警報試聽：防空警報聽力導引與音效" position="bottom">
               <button
                 onClick={() => setIsSirenOpen(true)}
-                className="h-[32px] w-[32px] sm:h-[34px] sm:w-[34px] bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 rounded-xl border border-cyan-600 flex items-center justify-center shrink-0 active:scale-95"
+                className="h-[28px] w-[28px] sm:h-[34px] sm:w-[34px] bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 rounded-xl border border-cyan-600 flex items-center justify-center shrink-0 active:scale-95"
               >
-                <Radio className="w-3.5 h-3.5 text-cyan-400" />
+                <Radio className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-400" />
               </button>
             </Tooltip>
 
@@ -148,9 +148,9 @@ export default function App() {
             <Tooltip text="避難包：家庭避難備糧勾選清單" position="bottom">
               <button
                 onClick={() => setIsChecklistOpen(true)}
-                className="h-[32px] w-[32px] sm:h-[34px] sm:w-[34px] bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 rounded-xl border border-emerald-600 flex items-center justify-center shrink-0 active:scale-95"
+                className="h-[28px] w-[28px] sm:h-[34px] sm:w-[34px] bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 rounded-xl border border-emerald-600 flex items-center justify-center shrink-0 active:scale-95"
               >
-                <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+                <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
               </button>
             </Tooltip>
 
@@ -158,10 +158,10 @@ export default function App() {
             <Tooltip text="119 直播：消防與急護報案電話" position="bottom">
               <a
                 href="tel:119"
-                className="h-[32px] sm:h-[34px] px-1.5 sm:px-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl border border-rose-400 text-xs font-black flex items-center justify-center shrink-0 active:scale-95 shadow"
+                className="h-[28px] sm:h-[34px] px-1 sm:px-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl border border-rose-400 text-[10px] sm:text-xs font-black flex items-center justify-center shrink-0 active:scale-95 shadow"
               >
-                <Phone className="w-3.5 h-3.5 shrink-0" />
-                <span className="ml-0.5 sm:ml-1 text-[11px] sm:text-xs font-black whitespace-nowrap">119</span>
+                <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                <span className="ml-0.5 text-[10px] sm:text-xs font-black whitespace-nowrap">119</span>
               </a>
             </Tooltip>
           </div>
