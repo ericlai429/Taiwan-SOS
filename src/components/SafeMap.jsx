@@ -589,7 +589,7 @@ export default function SafeMap({ cipherCode, onSelectDestination }) {
       {/* 底部敵佔領與快艇推進 30 分鐘時間軸拖拉回放控制器 (InvasionPlaybackBar) */}
       {showInvasion && (
         <div className={`absolute bottom-3 z-[990] transition-all ${
-          isLandscape && isMobile ? 'left-40 right-3' : 'left-3 right-3 sm:left-36 max-w-lg'
+          isLandscape && isMobile ? 'left-40 right-28' : 'left-3 right-3 sm:left-36 max-w-sm sm:max-w-lg'
         }`}>
           <InvasionPlaybackBar
             currentStepIndex={currentInvasionStep}
@@ -598,43 +598,47 @@ export default function SafeMap({ cipherCode, onSelectDestination }) {
         </div>
       )}
 
-      {/* 側邊按鈕控制列 (直橫向自動適應) */}
+      {/* 側邊按鈕控制列 (移至右側防止手機排版重疊) */}
       <div className={`absolute bottom-16 z-[990] flex flex-col gap-1.5 transition-all ${
-        isLandscape && isMobile ? 'left-16' : 'left-3'
+        isLandscape && isMobile ? 'left-16' : 'right-3'
       }`}>
         <button
           onClick={recenterMap}
-          className="p-2.5 bg-slate-900/90 border border-emerald-500 hover:bg-slate-800 text-emerald-400 rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
+          className="p-2.5 bg-slate-900/95 border border-emerald-500 hover:bg-slate-800 text-emerald-400 rounded-2xl shadow-xl flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
+          title="定位至我的位置"
         >
-          <Navigation className="w-5 h-5 animate-pulse text-emerald-400" />
-          <span className="text-sm font-bold text-white hidden sm:inline">我的位置</span>
+          <Navigation className="w-5 h-5 animate-pulse text-emerald-400 shrink-0" />
+          <span className="text-xs font-black text-white hidden sm:inline">我的位置</span>
         </button>
 
         {/* 新增彩色災害圈 */}
         <button
           onClick={() => setIsAddHazardOpen(true)}
-          className="p-2.5 bg-amber-950/90 border border-amber-500 hover:bg-amber-900 text-amber-300 rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
+          className="p-2 bg-amber-950/95 border border-amber-500 hover:bg-amber-900 text-amber-300 rounded-2xl shadow-xl flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
+          title="新增彩色圈"
         >
-          <CircleDot className="w-5 h-5 text-amber-400 animate-spin-slow" />
-          <span className="text-sm font-bold text-white">新增彩色圈</span>
+          <CircleDot className="w-5 h-5 text-amber-400 animate-spin-slow shrink-0" />
+          <span className="text-xs font-black text-white hidden sm:inline">新增彩色圈</span>
         </button>
 
         {/* 標記危險地區 (旗標) */}
         <button
           onClick={() => setIsAddFlagOpen(true)}
-          className="p-2.5 bg-rose-950/90 border border-rose-500 hover:bg-rose-900 text-rose-300 rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
+          className="p-2 bg-rose-950/95 border border-rose-500 hover:bg-rose-900 text-rose-300 rounded-2xl shadow-xl flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
+          title="標記危險區"
         >
-          <Flag className="w-5 h-5 text-rose-400 fill-rose-500" />
-          <span className="text-sm font-bold text-white">標記危險區</span>
+          <Flag className="w-5 h-5 text-rose-400 fill-rose-500 shrink-0" />
+          <span className="text-xs font-black text-white hidden sm:inline">標記危險區</span>
         </button>
 
         {/* 每日情報紀錄 */}
         <button
           onClick={() => setIsDailyIntelOpen(true)}
-          className="p-2.5 bg-slate-900/90 border border-slate-600 hover:bg-slate-800 text-slate-300 rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
+          className="p-2 bg-slate-900/95 border border-slate-600 hover:bg-slate-800 text-slate-300 rounded-2xl shadow-xl flex items-center gap-1.5 active:scale-95 backdrop-blur-md"
+          title="每日情報"
         >
-          <Calendar className="w-5 h-5 text-slate-300" />
-          <span className="text-sm font-bold text-white">每日情報</span>
+          <Calendar className="w-5 h-5 text-slate-300 shrink-0" />
+          <span className="text-xs font-black text-white hidden sm:inline">每日情報</span>
         </button>
       </div>
 
