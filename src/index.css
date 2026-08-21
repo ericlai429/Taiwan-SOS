@@ -34,6 +34,13 @@
   transform: translateZ(0);
 }
 
+.leaflet-popup-content {
+  color: #94a3b8 !important; /* 深灰色說明文字 (minimum 12px) */
+  font-size: clamp(12px, 2.2vw, 15px) !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
 .leaflet-popup-tip {
   background-color: #1e293b !important;
 }
