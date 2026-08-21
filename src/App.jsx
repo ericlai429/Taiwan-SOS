@@ -54,13 +54,6 @@ export default function App() {
     setActiveTab('map');
   };
 
-  const todayStr = new Date().toLocaleDateString('zh-TW', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long'
-  });
-
   const handleResetData = async () => {
     if (window.confirm('確定要清空所有網頁暫存與舊資料嗎？此操作將清除離線快取並重新載入最新網頁。')) {
       await clearAllCacheAndStorage();
@@ -70,9 +63,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none pb-20">
-      {/* 頂部長輩高對比標頭 (支援 5 級距按鈕組態切換 25px~60px) */}
+      {/* 頂部長輩高對比標頭 (嚴禁任何按鈕擠出螢幕) */}
       <header className="bg-slate-900 border-b border-slate-800 px-2 py-1.5 sticky top-0 z-50 shadow-md backdrop-blur-md bg-slate-900/95">
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-1.5 min-h-[42px]">
+        <div className="max-w-3xl mx-auto flex items-center justify-between gap-1.5 h-10 overflow-hidden">
           {/* 左側標題 */}
           <div className="flex items-center gap-1.5 shrink-0">
             <div className="p-1.5 bg-emerald-600 rounded-xl shadow-md shrink-0">
@@ -88,22 +81,16 @@ export default function App() {
             )}
           </div>
 
-          {/* 右側工具列 (支援 5 級距按鈕尺寸與浮窗提示) */}
-          <div className="flex items-center gap-1 shrink-0">
-            {/* ⚙️ 5 級距按鈕切換鈕 (25px ➔ 33px ➔ 42px ➔ 50px ➔ 60px) */}
-            <Tooltip text={`按鈕尺寸組態：當前【${currentLevelConfig.label}】 (點擊切換 5 級距)`} position="bottom">
+          {/* 右側工具列 (極致響應自適應，不擠出螢幕) */}
+          <div className="flex items-center gap-1 shrink-0 overflow-x-auto no-scrollbar max-w-[65%] sm:max-w-none">
+            {/* ⚙️ 5 級距按鈕切換鈕 */}
+            <Tooltip text={`按鈕尺寸：當前【${currentLevelConfig.label}】(點擊切換)`} position="bottom">
               <button
                 onClick={cycleBtnLevel}
-                className={`transition-all font-black flex items-center justify-center border active:scale-95 bg-purple-700 hover:bg-purple-600 border-purple-400 text-white ${
-                  btnLevel === 1 ? 'w-[25px] h-[25px] p-0 text-[10px] rounded-lg' :
-                  btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
-                  btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl gap-1' :
-                  btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl gap-1' :
-                  'h-[50px] px-3 py-2 text-senior-sm rounded-2xl font-black gap-1'
-                }`}
+                className="h-[34px] px-2 bg-purple-700 hover:bg-purple-600 border border-purple-400 text-white rounded-xl text-xs font-black flex items-center justify-center shrink-0 active:scale-95 transition-all"
               >
                 <Sliders className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                {currentLevelConfig.showText && <span className="whitespace-nowrap">{currentLevelConfig.px}px</span>}
+                <span className="hidden md:inline ml-1 whitespace-nowrap">{currentLevelConfig.px}px</span>
               </button>
             </Tooltip>
 
@@ -111,15 +98,9 @@ export default function App() {
             <Tooltip text="重置暫存：清空舊資料與離線快取" position="bottom">
               <button
                 onClick={handleResetData}
-                className={`transition-all font-bold flex items-center justify-center border active:scale-95 bg-slate-800 hover:bg-rose-950 text-slate-300 rounded-xl border-slate-700 ${
-                  btnLevel === 1 ? 'w-[25px] h-[25px] p-0 text-[10px] rounded-lg' :
-                  btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
-                  btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl' :
-                  btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl' :
-                  'h-[50px] px-3 py-2 text-senior-sm rounded-2xl'
-                }`}
+                className="h-[34px] w-[34px] bg-slate-800 hover:bg-rose-950 text-slate-300 rounded-xl border border-slate-700 flex items-center justify-center shrink-0 active:scale-95 transition-all"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
               </button>
             </Tooltip>
 
@@ -127,15 +108,9 @@ export default function App() {
             <Tooltip text="手電筒：極致白光與 SOS 爆閃燈" position="bottom">
               <button
                 onClick={() => setIsFlashlightOpen(true)}
-                className={`transition-all font-bold flex items-center justify-center border active:scale-95 bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-xl border-amber-600 ${
-                  btnLevel === 1 ? 'w-[25px] h-[25px] p-0 text-[10px] rounded-lg' :
-                  btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
-                  btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl' :
-                  btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl' :
-                  'h-[50px] px-3 py-2 text-senior-sm rounded-2xl'
-                }`}
+                className="h-[34px] w-[34px] bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-xl border border-amber-600 flex items-center justify-center shrink-0 active:scale-95"
               >
-                <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
               </button>
             </Tooltip>
 
@@ -143,15 +118,9 @@ export default function App() {
             <Tooltip text="警報試聽：防空警報聽力導引與音效" position="bottom">
               <button
                 onClick={() => setIsSirenOpen(true)}
-                className={`transition-all font-bold flex items-center justify-center border active:scale-95 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 rounded-xl border-cyan-600 ${
-                  btnLevel === 1 ? 'w-[25px] h-[25px] p-0 text-[10px] rounded-lg' :
-                  btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
-                  btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl' :
-                  btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl' :
-                  'h-[50px] px-3 py-2 text-senior-sm rounded-2xl'
-                }`}
+                className="h-[34px] w-[34px] bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 rounded-xl border border-cyan-600 flex items-center justify-center shrink-0 active:scale-95"
               >
-                <Radio className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <Radio className="w-3.5 h-3.5 text-cyan-400" />
               </button>
             </Tooltip>
 
@@ -159,32 +128,20 @@ export default function App() {
             <Tooltip text="避難包：家庭避難備糧勾選清單" position="bottom">
               <button
                 onClick={() => setIsChecklistOpen(true)}
-                className={`transition-all font-bold flex items-center justify-center border active:scale-95 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 rounded-xl border-emerald-600 ${
-                  btnLevel === 1 ? 'w-[25px] h-[25px] p-0 text-[10px] rounded-lg' :
-                  btnLevel === 2 ? 'w-[33px] h-[33px] p-1 text-xs rounded-xl' :
-                  btnLevel === 3 ? 'h-[36px] px-2 py-1 text-xs rounded-xl' :
-                  btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 text-xs rounded-xl' :
-                  'h-[50px] px-3 py-2 text-senior-sm rounded-2xl'
-                }`}
+                className="h-[34px] w-[34px] bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 rounded-xl border border-emerald-600 flex items-center justify-center shrink-0 active:scale-95"
               >
-                <ShoppingBag className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
               </button>
             </Tooltip>
 
             {/* 📞 119 */}
-            <Tooltip text="119 直撥：消防與急護報案電話" position="bottom">
+            <Tooltip text="119 直播：消防與急護報案電話" position="bottom">
               <a
                 href="tel:119"
-                className={`bg-rose-600 hover:bg-rose-500 text-white font-black flex items-center justify-center shadow active:scale-95 border border-rose-400 whitespace-nowrap transition-all ${
-                  btnLevel === 1 ? 'w-[25px] h-[25px] p-0 rounded-lg text-[10px]' :
-                  btnLevel === 2 ? 'w-[33px] h-[33px] p-1 rounded-xl text-xs' :
-                  btnLevel === 3 ? 'h-[36px] px-2 py-1 rounded-xl text-xs' :
-                  btnLevel === 4 ? 'h-[42px] px-2.5 py-1.5 rounded-xl text-xs' :
-                  'h-[50px] px-3 py-2 rounded-2xl text-senior-sm font-black'
-                }`}
+                className="h-[34px] px-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl border border-rose-400 text-xs font-black flex items-center justify-center shrink-0 active:scale-95 shadow"
               >
-                <Phone className="w-3.5 h-3.5 shrink-0" />
-                {btnLevel >= 3 && <span className="ml-1">119</span>}
+                <Phone className="w-3.5 h-3.5" />
+                <span className="ml-1 text-xs">119</span>
               </a>
             </Tooltip>
           </div>

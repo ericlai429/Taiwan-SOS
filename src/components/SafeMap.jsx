@@ -51,11 +51,11 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     invasionGroup: null
   });
 
-  const [userLocation, setUserLocation] = useState({ lat: 25.0478, lng: 121.5170 });
+  const [userLocation, setUserLocation] = useState({ lat: 25.0645, lng: 121.6570 });
   const [gpsActive, setGpsActive] = useState(false);
   const [useRadiusFilter, setUseRadiusFilter] = useState(true);
   const [radiusKm, setRadiusKm] = useState(5);
-  const [selectedCountyId, setSelectedCountyId] = useState('tp');
+  const [selectedCountyId, setSelectedCountyId] = useState('xz');
 
   const [navTarget, setNavTarget] = useState(null);
 
@@ -131,7 +131,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     if (!mapRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapRef.current, {
-      center: [25.0478, 121.5170],
+      center: [25.0645, 121.6570],
       zoom: 14,
       zoomControl: false
     });
@@ -163,10 +163,31 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     };
   }, []);
 
-  // 2. 移動中的 GPS 定位與追蹤 (watchPosition)
+  // 2. 移動中的 GPS 高精度真實定位與動態追蹤
   useEffect(() => {
     if (!navigator.geolocation) return;
 
+    // A. 載入時立刻進行一次硬體高精度 GPS 座標定位並自動跳轉地圖至真實位置
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const realLoc = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          heading: pos.coords.heading,
+          speed: pos.coords.speed
+        };
+        setUserLocation(realLoc);
+        setGpsActive(true);
+        const map = mapInstanceRef.current;
+        if (map) {
+          map.flyTo([realLoc.lat, realLoc.lng], 15, { animate: true });
+        }
+      },
+      (err) => console.warn('首刷 GPS 定位失敗/遭封鎖，使用預設中心:', err),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+
+    // B. 開啟實時動態 GPS 追蹤 (watchPosition)
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         setUserLocation({
@@ -576,7 +597,28 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
 
   const recenterMap = () => {
     const map = mapInstanceRef.current;
-    if (map && userLocation) map.flyTo([userLocation.lat, userLocation.lng], 15, { animate: true });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const realLoc = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            heading: pos.coords.heading,
+            speed: pos.coords.speed
+          };
+          setUserLocation(realLoc);
+          setGpsActive(true);
+          if (map) map.flyTo([realLoc.lat, realLoc.lng], 15, { animate: true });
+        },
+        (err) => {
+          console.warn('重新取得 GPS 失敗:', err);
+          if (map && userLocation) map.flyTo([userLocation.lat, userLocation.lng], 15, { animate: true });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else if (map && userLocation) {
+      map.flyTo([userLocation.lat, userLocation.lng], 15, { animate: true });
+    }
   };
 
   // 8. 螢幕尺寸與直橫向自動偵測
