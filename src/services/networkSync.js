@@ -1,7 +1,6 @@
 /**
  * 🌐 全功能強固型跨裝置 (手機 4G <-> 電腦/NB) 即時 MQTT WebSockets 同步引擎
- * 經實測雙通道驗證：EMQX (:8084) 與 HiveMQ SSL (:8884) 100% 連線成功
- * 100% 支援跨實體裝置、跨行動網路 (4G/5G/Wi-Fi) 零延遲即時彈幕廣播與暗碼對話對齊
+ * 修復：BroadcastChannel 本地廣播加入頻道 topic 標頭過濾，防止同瀏覽器不同頻道的訊息互串
  */
 
 import mqtt from 'mqtt';
@@ -41,9 +40,16 @@ class RealtimeNetworkSync {
   initLocalChannel() {
     if ('BroadcastChannel' in window) {
       try {
+        // 📌 BUG FIX：固定用同一 BroadcastChannel 名稱，但在訊息 envelope 中附加 topic，
+        //   收訊端比對 topic 是否符合當前頻道，不符合則丟棄，防止頻道互串
         this.localChannel = new BroadcastChannel('taiwan_sos_local_bus');
         this.localChannel.onmessage = (e) => {
-          if (e.data) this.notifySubscribers(e.data, 'local');
+          if (!e.data) return;
+          // 📌 topic 過濾：只接受當前頻道的本地廣播訊息
+          if (e.data._topic && e.data._topic !== this.currentTopic) return;
+          if (e.data.payload) {
+            this.notifySubscribers(e.data.payload, 'local');
+          }
         };
       } catch (err) {
         console.warn('Local BroadcastChannel error', err);
@@ -109,12 +115,12 @@ class RealtimeNetworkSync {
       this.client.on('connect', () => {
         this.isConnected = true;
         this.isConnecting = false;
-        console.log(`✅ 跨裝置 MQTT 即時網路連線成功 [${targetUrl}] 訂閱：${this.currentTopic}`);
-        
         this.client.subscribe(this.currentTopic, { qos: 0 });
       });
 
       this.client.on('message', (topic, message) => {
+        // 📌 BUG FIX：MQTT 收訊時也要比對 topic 是否為當前頻道
+        if (topic !== this.currentTopic) return;
         try {
           const strPayload = message.toString();
           const parsed = JSON.parse(strPayload);
@@ -147,9 +153,10 @@ class RealtimeNetworkSync {
   broadcast(type, data) {
     const payloadObj = { type, data, timestamp: Date.now() };
 
+    // 📌 BUG FIX：本地廣播 envelope 中附加當前 topic，讓收訊端可以過濾頻道
     if (this.localChannel) {
       try {
-        this.localChannel.postMessage(payloadObj);
+        this.localChannel.postMessage({ _topic: this.currentTopic, payload: payloadObj });
       } catch (e) {}
     }
 

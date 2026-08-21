@@ -1004,9 +1004,12 @@ export default function SafeMap({
       <DanmakuOverlay danmakuList={danmakuList} />
 
       {/* 🛡️ 智能網格分區 1：頂部全台 22 縣市定位與災害圖例列 */}
-      <div className={`absolute top-3 z-[990] max-w-lg space-y-1.5 transition-all ${
-        isLandscape && isMobile ? 'left-16 right-3' : 'left-3 right-3 sm:right-auto'
-      }`}>
+      <div
+        className={`absolute z-[990] max-w-lg space-y-1.5 transition-all ${
+          isLandscape && isMobile ? 'left-16 right-3' : 'left-3 right-3 sm:right-auto'
+        }`}
+        style={{ top: 'max(12px, env(safe-area-inset-top, 12px))' }}
+      >
         <CountySelector
           selectedCountyId={selectedCountyId}
           onSelectCounty={handleSelectCounty}

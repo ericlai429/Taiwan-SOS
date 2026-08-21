@@ -1,16 +1,22 @@
 /**
  * LocalStorage / 離線資料持久化與快取重置管理
+ * 修復：每個頻道 (cipherCode) 使用獨立的訊息 key，防止跨頻道訊息互串
  */
 
 const KEYS = {
   CIPHER_CODE: 'taiwan_safe_cipher_code',
-  CHAT_MESSAGES: 'taiwan_safe_chat_messages',
   DANGER_FLAGS: 'taiwan_safe_danger_flags',
   HAZARD_ZONES: 'taiwan_safe_hazard_zones',
   DAILY_INTEL: 'taiwan_safe_daily_intel',
   HEARTBEATS: 'taiwan_safe_heartbeats',
   DAY_TIME_LOG: 'taiwan_safe_day_time_log'
 };
+
+// 📌 每個頻道獨立的訊息 storage key (防止跨頻道訊息互串 BUG)
+function getChannelMsgKey(cipherCode) {
+  const safe = (cipherCode || 'CH-01').trim().replace(/[^a-zA-Z0-9\-_]/g, '_').substring(0, 40);
+  return `taiwan_safe_chat_messages__${safe}`;
+}
 
 // 暗碼保存與讀取
 export function getStoredCipherCode() {
@@ -21,29 +27,33 @@ export function setStoredCipherCode(code) {
   localStorage.setItem(KEYS.CIPHER_CODE, code);
 }
 
-// 聊天訊息儲存
-export function getStoredMessages() {
+// 聊天訊息儲存 (頻道隔離版本)
+export function getStoredMessages(cipherCode) {
   try {
-    const raw = localStorage.getItem(KEYS.CHAT_MESSAGES);
+    const key = getChannelMsgKey(cipherCode);
+    const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : getInitialMessages();
   } catch (e) {
     return getInitialMessages();
   }
 }
 
-export function saveMessage(msgObj) {
-  const list = getStoredMessages();
+export function saveMessage(msgObj, cipherCode) {
+  const key = getChannelMsgKey(cipherCode);
+  const list = getStoredMessages(cipherCode);
+  // 防重複儲存：同一 id 只存一次
+  if (list.some(m => m.id === msgObj.id)) return list;
   list.push(msgObj);
-  localStorage.setItem(KEYS.CHAT_MESSAGES, JSON.stringify(list));
+  localStorage.setItem(key, JSON.stringify(list));
   return list;
 }
 
 function getInitialMessages() {
   return [
     {
-      id: "msg-1",
-      sender: "指揮組 / 系統廣播",
-      text: "歡迎使用台灣急難通 (Taiwan SOS)。請親友對齊『暗碼』後進行安全加密對話與災害圈共享。",
+      id: 'msg-1',
+      sender: '指揮組 / 系統廣播',
+      text: '歡迎使用台灣急難通 (Taiwan SOS)。請親友對齊『暗碼』後進行安全加密對話與災害圈共享。',
       isEncrypted: false,
       timestamp: new Date(Date.now() - 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
@@ -119,9 +129,13 @@ export function getStoredDayTimeLog() {
 export function appendDayTimeLog(entry) {
   try {
     const logs = getStoredDayTimeLog();
+    // 防止同一 id 重複追加
+    if (logs.some(l => l.id === entry.id)) return logs;
     logs.push(entry);
-    localStorage.setItem(KEYS.DAY_TIME_LOG, JSON.stringify(logs));
-    return logs;
+    // 保留最近 200 筆 log，防止 localStorage 爆容
+    const trimmed = logs.slice(-200);
+    localStorage.setItem(KEYS.DAY_TIME_LOG, JSON.stringify(trimmed));
+    return trimmed;
   } catch (e) {
     return [];
   }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Lock, Unlock, Send, Key, Smartphone, UserCheck, EyeOff, ShieldCheck, Activity, Radio } from 'lucide-react';
 import { encryptMessage, decryptMessage } from '../services/crypto';
 import { getStoredCipherCode, setStoredCipherCode, getStoredMessages, saveMessage, appendDayTimeLog } from '../services/storage';
@@ -7,11 +7,15 @@ import { networkSync } from '../services/networkSync';
 
 export default function CipherChat({ cipherCode, setCipherCode }) {
   const [inputCode, setInputCode] = useState(cipherCode || '');
-  const [messages, setMessages] = useState([]);
+
+  // 📌 BUG FIX：每次 cipherCode 改變，訊息列表都要重設為對應頻道的訊息，不再共用
+  const [messages, setMessages] = useState(() => getStoredMessages(cipherCode));
   const [decryptedList, setDecryptedList] = useState([]);
   const [inputText, setInputText] = useState('');
   const [onlinePeers, setOnlinePeers] = useState({});
   const [netStatus, setNetStatus] = useState(networkSync.isConnected);
+
+  const msgEndRef = useRef(null); // 📌 新增：自動捲動到底部
 
   // 📌 自動偵測/預設手機末 3 碼
   const [phone3Digits, setPhone3Digits] = useState(() => {
@@ -47,8 +51,11 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
 
   const strength = checkCipherStrength(cipherCode);
 
-  // 📌 跨裝置 (手機 <-> 電腦/NB) 即時同步頻道設定與監聽 (含 3 分鐘心跳與狀態監測)
+  // 📌 BUG FIX：當頻道 (cipherCode) 切換時，清空訊息並重載對應頻道歷史，同時重設在線名單
   useEffect(() => {
+    setMessages(getStoredMessages(cipherCode));
+    setOnlinePeers({});          // 切換頻道後清除舊頻道在線名單
+    setInputCode(cipherCode);
     networkSync.setChannel(cipherCode);
     setNetStatus(networkSync.isConnected);
 
@@ -60,9 +67,11 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
       if (payload && payload.data) {
         if (payload.type === 'CHAT_MESSAGE') {
           setMessages((prev) => {
+            // 防重複：同一 id 只加一次
             if (prev.some((m) => m.id === payload.data.id)) return prev;
             const updated = [...prev, payload.data];
-            saveMessage(payload.data);
+            // 📌 BUG FIX：儲存時帶入 cipherCode，確保寫入正確頻道的 key
+            saveMessage(payload.data, cipherCode);
             return updated;
           });
         } else if (payload.type === 'HEARTBEAT_PING') {
@@ -108,20 +117,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     } catch (e) {}
   }, [phone3Digits, customNickname]);
 
-  // 載入訊息歷史
-  useEffect(() => {
-    setMessages(getStoredMessages());
-  }, []);
-
-  // 更新暗碼
-  const handleSaveCipher = (e) => {
-    e.preventDefault();
-    setCipherCode(inputCode);
-    setStoredCipherCode(inputCode);
-    alert(`✅ 已切換暗碼為：${inputCode || '（未設定）'}`);
-  };
-
-  // 即時解密訊息清單 ( sanitize 解密後文字防護 XSS )
+  // 即時解密訊息清單 (sanitize 解密後文字防護 XSS)
   useEffect(() => {
     let isMounted = true;
     async function decryptAll() {
@@ -141,6 +137,32 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     return () => { isMounted = false; };
   }, [messages, cipherCode]);
 
+  // 📌 新增：每次訊息列表更新後自動捲動到底部
+  useEffect(() => {
+    if (msgEndRef.current) {
+      msgEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [decryptedList]);
+
+  // 更新暗碼 (透過 form submit)
+  const handleSaveCipher = (e) => {
+    e.preventDefault();
+    const trimmed = inputCode.trim();
+    if (!trimmed) {
+      alert('⚠️ 請輸入暗碼或頻道號碼（如 CH-01、FAMILY888）');
+      return;
+    }
+    setCipherCode(trimmed);
+    setStoredCipherCode(trimmed);
+  };
+
+  // 快速切換公共頻道
+  const switchChannel = (ch) => {
+    setInputCode(ch);
+    setCipherCode(ch);
+    setStoredCipherCode(ch);
+  };
+
   // 發送加密訊息 (雙重防護 XSS 與端到端 AES-GCM 256-bit 加密)
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -148,7 +170,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
     if (!cleanText) return;
 
     if (!cipherCode) {
-      if (!confirm('⚠️ 當前未設定『暗碼』，訊息將以一般文字發送。是否繼續？')) {
+      if (!confirm('⚠️ 當前未設定『暗碼』，訊息將以一般文字發送至公共頻道。是否繼續？')) {
         return;
       }
     }
@@ -158,35 +180,43 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
       : cleanText;
 
     const newMsg = {
-      id: 'msg-' + Date.now(),
+      id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
       sender: currentSenderName,
       text: cipherText,
       isEncrypted: !!cipherCode,
+      channel: cipherCode || 'CH-01',  // 📌 訊息攜帶頻道欄位，方便日誌追蹤
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    const updated = saveMessage(newMsg);
+    // 📌 BUG FIX：saveMessage 帶入 cipherCode，確保存入正確頻道 key
+    const updated = saveMessage(newMsg, cipherCode);
     appendDayTimeLog({
       id: newMsg.id,
       timestamp: newMsg.timestamp,
       sender: newMsg.sender,
+      channel: newMsg.channel,
       message: cipherText,
       isEncrypted: newMsg.isEncrypted
     });
+
     // 🌐 跨裝置 (手機 <-> 電腦/NB) 即時網路廣播發送
     networkSync.broadcast('CHAT_MESSAGE', newMsg);
     setMessages(updated);
     setInputText('');
   };
 
-  // 一鍵發送平安心跳
+  // 一鍵發送平安心跳快捷填入
   const sendQuickHeartbeat = () => {
     setInputText(`🟢 [平安心跳] 我目前平安，無須擔心！ (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`);
   };
 
+  const chLabel = cipherCode
+    ? (cipherCode.startsWith('CH-') ? `📡 ${cipherCode} 頻道` : `🔒 暗碼群組`)
+    : '⚠️ 未設定暗碼';
+
   return (
     <div className="max-w-2xl mx-auto p-3.5 pb-24 space-y-3">
-      {/* 暗碼設定卡 (精簡 15px 風格) */}
+      {/* 暗碼設定卡 */}
       <div className="bg-slate-800/95 border-2 border-cyan-500 rounded-2xl p-3.5 shadow-xl space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-cyan-400 font-extrabold text-[15px]">
@@ -201,7 +231,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
         </div>
 
         <form onSubmit={handleSaveCipher} className="space-y-1.5">
-          {/* 📡 100 頻道房間快速選擇列 (每 1, 10, 20, 30 為公共大頻) */}
+          {/* 📡 100 頻道房間快速選擇列 */}
           <div className="bg-slate-900/90 p-2 rounded-xl border border-slate-700 space-y-1.5 text-xs">
             <div className="flex items-center justify-between font-bold text-slate-300">
               <span className="flex items-center gap-1 text-cyan-300">
@@ -212,61 +242,25 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-[11px] font-bold">
-              <button
-                type="button"
-                onClick={() => {
-                  setInputCode('CH-01');
-                  setCipherCode('CH-01');
-                  setStoredCipherCode('CH-01');
-                }}
-                className={`p-1.5 rounded-lg border text-center transition-all ${
-                  cipherCode === 'CH-01' ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-extrabold shadow' : 'bg-slate-800 border-slate-700 text-slate-300'
-                }`}
-              >
-                📢 CH-01 公共大頻
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setInputCode('CH-10');
-                  setCipherCode('CH-10');
-                  setStoredCipherCode('CH-10');
-                }}
-                className={`p-1.5 rounded-lg border text-center transition-all ${
-                  cipherCode === 'CH-10' ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-extrabold shadow' : 'bg-slate-800 border-slate-700 text-slate-300'
-                }`}
-              >
-                🛡️ CH-10 雙北防衛
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setInputCode('CH-20');
-                  setCipherCode('CH-20');
-                  setStoredCipherCode('CH-20');
-                }}
-                className={`p-1.5 rounded-lg border text-center transition-all ${
-                  cipherCode === 'CH-20' ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-extrabold shadow' : 'bg-slate-800 border-slate-700 text-slate-300'
-                }`}
-              >
-                🌊 CH-20 桃基海岸
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setInputCode('CH-30');
-                  setCipherCode('CH-30');
-                  setStoredCipherCode('CH-30');
-                }}
-                className={`p-1.5 rounded-lg border text-center transition-all ${
-                  cipherCode === 'CH-30' ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-extrabold shadow' : 'bg-slate-800 border-slate-700 text-slate-300'
-                }`}
-              >
-                📦 CH-30 物資醫療
-              </button>
+              {[
+                { ch: 'CH-01', label: '📢 CH-01 公共大頻' },
+                { ch: 'CH-10', label: '🛡️ CH-10 雙北防衛' },
+                { ch: 'CH-20', label: '🌊 CH-20 桃基海岸' },
+                { ch: 'CH-30', label: '📦 CH-30 物資醫療' }
+              ].map(({ ch, label }) => (
+                <button
+                  key={ch}
+                  type="button"
+                  onClick={() => switchChannel(ch)}
+                  className={`p-1.5 rounded-lg border text-center transition-all ${
+                    cipherCode === ch
+                      ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-extrabold shadow'
+                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-cyan-600 hover:text-cyan-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
             <div className="flex items-center gap-1.5 pt-0.5">
@@ -274,11 +268,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
               <select
                 value={cipherCode.startsWith('CH-') ? cipherCode : 'custom'}
                 onChange={(e) => {
-                  if (e.target.value !== 'custom') {
-                    setInputCode(e.target.value);
-                    setCipherCode(e.target.value);
-                    setStoredCipherCode(e.target.value);
-                  }
+                  if (e.target.value !== 'custom') switchChannel(e.target.value);
                 }}
                 className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-amber-300 focus:border-cyan-400 focus:outline-none"
               >
@@ -388,7 +378,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
               disabled={isAnonymous}
               value={customNickname}
               onChange={(e) => setCustomNickname(e.target.value)}
-              placeholder={isAnonymous ? "匿名模式發話中..." : "如：大伯、媽媽、志工..."}
+              placeholder={isAnonymous ? '匿名模式發話中...' : '如：大伯、媽媽、志工...'}
               className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-bold text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none disabled:opacity-40"
             />
           </div>
@@ -400,7 +390,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
         </div>
       </div>
 
-      {/* 📡 暗碼群組親友即時心跳頻率動態面板 (固定每 3 分鐘) */}
+      {/* 📡 暗碼群組親友即時心跳頻率動態面板 */}
       <div className="bg-slate-900/90 border border-emerald-500/80 rounded-2xl p-3 space-y-1.5 text-xs shadow-md">
         <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
           <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
@@ -412,6 +402,14 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
             脈衝定時連線中
           </span>
+        </div>
+
+        {/* 📌 當前頻道顯示 */}
+        <div className="text-[11px] font-bold text-cyan-400 px-0.5">
+          ▶ 當前頻道：<span className="text-amber-300 font-mono">{chLabel}</span>
+          {cipherCode && (
+            <span className="ml-2 text-slate-500 font-normal text-[10px]">(MQTT: taiwan-sos/pubsub/{encodeURIComponent(cipherCode)})</span>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
@@ -433,8 +431,14 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
         </div>
       </div>
 
-      {/* 對話歷史紀錄 (文字大小為 15px) */}
+      {/* 對話歷史紀錄 */}
       <div className="bg-slate-900/80 border border-slate-700 rounded-2xl p-3 shadow-inner min-h-[260px] max-h-[360px] overflow-y-auto space-y-2.5">
+        {decryptedList.length === 0 && (
+          <div className="text-center text-slate-500 text-sm py-10">
+            <div className="text-2xl mb-2">💬</div>
+            <div>此頻道尚無訊息，請發送第一則訊息！</div>
+          </div>
+        )}
         {decryptedList.map((m) => {
           const isMe = m.sender === currentSenderName;
           return (
@@ -457,11 +461,11 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
                 <div className="flex items-center gap-1.5 mb-1">
                   {m.isEncrypted ? (
                     m.isUnlocked ? (
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-950 px-2 py-0.2 rounded-full border border-emerald-600">
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-600">
                         <Unlock className="w-3 h-3" /> 暗碼已解密
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-rose-300 bg-rose-950 px-2 py-0.2 rounded-full border border-rose-600">
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-rose-300 bg-rose-950 px-2 py-0.5 rounded-full border border-rose-600">
                         <Lock className="w-3 h-3" /> 加密防竊聽中
                       </span>
                     )
@@ -475,9 +479,11 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
             </div>
           );
         })}
+        {/* 📌 自動捲動錨點 */}
+        <div ref={msgEndRef} />
       </div>
 
-      {/* 發送輸入區與快速按鈕 (文字與輸入框 15px) */}
+      {/* 發送輸入區與快速按鈕 */}
       <form onSubmit={handleSendMessage} className="space-y-1.5">
         <div className="flex gap-1.5">
           <button
@@ -494,7 +500,7 @@ export default function CipherChat({ cipherCode, setCipherCode }) {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="輸入加密對話訊息..."
+            placeholder={`輸入加密對話訊息... (${chLabel})`}
             className="flex-1 min-w-0 bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-[15px] text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
           />
           <button
