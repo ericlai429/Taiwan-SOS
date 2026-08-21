@@ -32,6 +32,7 @@ import Tooltip from './Tooltip';
 import GPSShareModal from './GPSShareModal';
 import { Share2 } from 'lucide-react';
 import invasionHistoryData from '../data/invasion_history.json';
+import osintVectorsData from '../data/osint_vectors.json';
 
 export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 }) {
   const mapRef = useRef(null);
@@ -50,7 +51,8 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     facilitiesGroup: null,
     missileGroup: null,
     coastalGroup: null,
-    invasionGroup: null
+    invasionGroup: null,
+    osintGroup: null
   });
 
   const [userLocation, setUserLocation] = useState({ lat: 25.0645, lng: 121.6570 });
@@ -157,6 +159,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
     layersRef.current.missileGroup = L.layerGroup().addTo(map);
     layersRef.current.coastalGroup = L.layerGroup().addTo(map);
     layersRef.current.invasionGroup = L.layerGroup().addTo(map);
+    layersRef.current.osintGroup = L.layerGroup().addTo(map);
 
     mapInstanceRef.current = map;
 
@@ -350,7 +353,7 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
       });
     }
 
-    // 沿海預警渲染
+    // 沿海與 15 大紅色海灘預警渲染
     layersRef.current.coastalGroup.clearLayers();
     if (showCoastal) {
       coastalZonesData.forEach(c => {
@@ -367,8 +370,72 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
             <p style="margin:2px 0;"><b>警戒半徑：</b>${c.radiusMeters} 公尺</p>
             <p style="margin:2px 0; color:#fdba74;">${c.warningMsg}</p>
           </div>
-        `);
+        `, { autoPan: false, keepInView: true });
         layersRef.current.coastalGroup.addLayer(circle);
+      });
+    }
+
+    // ⚓✈️ 開源動態向量情報 (OSINT Naval Ships & Military Aircraft) 渲染
+    layersRef.current.osintGroup.clearLayers();
+    if (showCoastal || showInvasion) {
+      // 1. 海上艦艇與登陸船團向量
+      osintVectorsData.navalVessels.forEach(ship => {
+        const shipIcon = L.divIcon({
+          className: 'osint-ship-icon',
+          html: `<div class="bg-blue-950 border-2 border-cyan-400 text-cyan-300 font-extrabold px-2 py-0.5 rounded-xl text-xs flex items-center gap-1 shadow-2xl animate-pulse">${ship.name}</div>`,
+          iconSize: [145, 26],
+          iconAnchor: [72, 13]
+        });
+
+        const marker = L.marker([ship.lat, ship.lng], { icon: shipIcon }).bindPopup(`
+          <div style="font-family: sans-serif; padding: 4px;">
+            <h4 style="font-size: 15px; font-weight: bold; color: #38bdf8; margin:0 0 4px 0;">${ship.name}</h4>
+            <p style="margin:2px 0;"><b>航向/航速：</b>${ship.heading}° / ${ship.speedKnots} 節</p>
+            <p style="margin:2px 0; color:#38bdf8;"><b>開源情報狀態：</b>${ship.status}</p>
+          </div>
+        `, { autoPan: false, keepInView: true });
+
+        layersRef.current.osintGroup.addLayer(marker);
+
+        if (ship.vector && ship.vector.length > 1) {
+          const polyline = L.polyline(ship.vector, {
+            color: '#0284c7',
+            weight: 3,
+            dashArray: '6, 6',
+            opacity: 0.85
+          });
+          layersRef.current.osintGroup.addLayer(polyline);
+        }
+      });
+
+      // 2. 空中戰機、預警機與無人機戰術航跡
+      osintVectorsData.aircraftVectors.forEach(air => {
+        const airIcon = L.divIcon({
+          className: 'osint-air-icon',
+          html: `<div class="bg-indigo-950 border-2 border-indigo-400 text-indigo-200 font-extrabold px-2 py-0.5 rounded-xl text-xs flex items-center gap-1 shadow-2xl animate-bounce-short">${air.name}</div>`,
+          iconSize: [145, 26],
+          iconAnchor: [72, 13]
+        });
+
+        const marker = L.marker([air.lat, air.lng], { icon: airIcon }).bindPopup(`
+          <div style="font-family: sans-serif; padding: 4px;">
+            <h4 style="font-size: 15px; font-weight: bold; color: #a5b4fc; margin:0 0 4px 0;">${air.name}</h4>
+            <p style="margin:2px 0;"><b>高度/航向：</b>${air.altitudeFt} ft / ${air.heading}°</p>
+            <p style="margin:2px 0; color:#a5b4fc;"><b>開源情報航跡：</b>${air.status}</p>
+          </div>
+        `, { autoPan: false, keepInView: true });
+
+        layersRef.current.osintGroup.addLayer(marker);
+
+        if (air.path && air.path.length > 1) {
+          const polyline = L.polyline(air.path, {
+            color: '#6366f1',
+            weight: 3,
+            dashArray: '4, 4',
+            opacity: 0.9
+          });
+          layersRef.current.osintGroup.addLayer(polyline);
+        }
       });
     }
 
@@ -410,8 +477,97 @@ export default function SafeMap({ cipherCode, onSelectDestination, btnLevel = 3 
               <p style="margin:2px 0;"><b>進攻向量：</b>${boat.vector}</p>
               <p style="margin:2px 0; color:#cbd5e1;">時間軸狀態：${activeSnapshot.timeKey}</p>
             </div>
-          `);
+          `, { autoPan: false, keepInView: true });
           layersRef.current.invasionGroup.addLayer(boatMarker);
+        });
+      }
+
+      // C. 🚀 彈道飛彈打擊軌跡與著彈區預警 (東風系列彈道飛彈與爆震半徑)
+      if (activeSnapshot.missiles) {
+        activeSnapshot.missiles.forEach(msl => {
+          if (msl.trajectory && msl.trajectory.length > 1) {
+            const pathLine = L.polyline(msl.trajectory, {
+              color: '#ef4444',
+              weight: 3,
+              dashArray: '5, 5',
+              opacity: 0.9
+            });
+            layersRef.current.invasionGroup.addLayer(pathLine);
+          }
+
+          const blastCircle = L.circle([msl.impactLat, msl.impactLng], {
+            radius: msl.blastRadiusMeters,
+            color: '#dc2626',
+            fillColor: '#b91c1c',
+            fillOpacity: 0.45,
+            weight: 3,
+            dashArray: '4, 4'
+          }).bindPopup(`
+            <div style="font-family: sans-serif; padding: 4px;">
+              <h4 style="font-size: 16px; font-weight: bold; color: #ef4444; margin:0 0 4px 0;">🚀 ${msl.name}</h4>
+              <p style="margin:2px 0;"><b>目標地點：</b><span style="color:#fca5a5; font-weight:bold;">${msl.targetName}</span></p>
+              <p style="margin:2px 0;"><b>預估爆震半徑：</b>${msl.blastRadiusMeters} 公尺</p>
+              <p style="margin:4px 0 0 0; color:#f59e0b; font-weight:bold;">⚠️ 告誡：彈道預警降落，請迅速趴下護頭躲避！</p>
+            </div>
+          `, { autoPan: false, keepInView: true });
+
+          layersRef.current.invasionGroup.addLayer(blastCircle);
+
+          const mslIcon = L.divIcon({
+            className: 'missile-impact-icon',
+            html: `<div class="bg-rose-950 border-2 border-rose-500 text-rose-300 font-extrabold px-2 py-0.5 rounded-xl text-xs flex items-center gap-1 shadow-2xl animate-pulse">🚀 ${msl.name}</div>`,
+            iconSize: [160, 28],
+            iconAnchor: [80, 14]
+          });
+
+          const mslMarker = L.marker([msl.impactLat, msl.impactLng], { icon: mslIcon }).bindPopup(`
+            <div style="font-family: sans-serif; padding: 4px;">
+              <h4 style="font-size: 15px; font-weight: bold; color: #ef4444; margin:0 0 4px 0;">🚀 ${msl.name} (著彈區)</h4>
+              <p style="margin:2px 0;"><b>預計打擊：</b>${msl.targetName}</p>
+            </div>
+          `, { autoPan: false, keepInView: true });
+
+          layersRef.current.invasionGroup.addLayer(mslMarker);
+        });
+      }
+
+      // D. 🪂 敵軍飛機傘兵機降與空降集結推演
+      if (activeSnapshot.paratrooperDrops) {
+        activeSnapshot.paratrooperDrops.forEach(drop => {
+          const dropCircle = L.circle([drop.lat, drop.lng], {
+            radius: drop.radiusMeters,
+            color: '#a855f7',
+            fillColor: '#9333ea',
+            fillOpacity: 0.35,
+            weight: 3,
+            dashArray: '8, 4'
+          }).bindPopup(`
+            <div style="font-family: sans-serif; padding: 4px;">
+              <h4 style="font-size: 16px; font-weight: bold; color: #c084fc; margin:0 0 4px 0;">🪂 ${drop.name}</h4>
+              <p style="margin:2px 0;"><b>空降地點：</b>${drop.locationName}</p>
+              <p style="margin:2px 0;"><b>載運機型：</b>${drop.aircraft}</p>
+              <p style="margin:2px 0; color:#e9d5ff;">${drop.notes}</p>
+            </div>
+          `, { autoPan: false, keepInView: true });
+
+          layersRef.current.invasionGroup.addLayer(dropCircle);
+
+          const dropIcon = L.divIcon({
+            className: 'drop-icon',
+            html: `<div class="bg-purple-950 border-2 border-purple-400 text-purple-200 font-extrabold px-2 py-0.5 rounded-xl text-xs flex items-center gap-1 shadow-2xl animate-bounce-short">${drop.name}</div>`,
+            iconSize: [160, 28],
+            iconAnchor: [80, 14]
+          });
+
+          const dropMarker = L.marker([drop.lat, drop.lng], { icon: dropIcon }).bindPopup(`
+            <div style="font-family: sans-serif; padding: 4px;">
+              <h4 style="font-size: 15px; font-weight: bold; color: #c084fc; margin:0 0 4px 0;">🪂 ${drop.name}</h4>
+              <p style="margin:2px 0;"><b>機型：</b>${drop.aircraft}</p>
+              <p style="margin:2px 0; color:#e9d5ff;">${drop.notes}</p>
+            </div>
+          `, { autoPan: false, keepInView: true });
+
+          layersRef.current.invasionGroup.addLayer(dropMarker);
         });
       }
     }
